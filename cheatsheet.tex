@@ -1,0 +1,57 @@
+\documentclass{article}
+
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+\begin{document}
+
+\begin{itemize}
+  \item $N$ blocks in $S$
+  \item $M$ blocks in $R$
+  \item $p_R$ tuples per page in $R$
+  \item $p_S$ tuples per page in $S$
+  \item $n_R$ tuples in $R$
+  \item $n_S$ tuples in $S$
+  \item $B$ buffer pages
+  \item $O_t$ number of output tuples
+  \item $O_B$ number of output blocks
+  \item $F$ fan out of tree ($2d + 1$)
+  \item $H$ number of IOs for a hash lookup
+\end{itemize}
+
+\begin{itemize}
+  \item Two-way external sort: $2N(\ceil{\log_2(N)} + 1)$
+  \item External sort: $2N(\ceil{\log_{B-1}(\ceil{N/B})} + 1)$
+  \item External sort with replacement sort: $2N(\ceil{\log_{B-1}(\ceil{N/2B})} + 1)$
+  \item External sort with replacement sort and blocked I/O: $2N(\ceil{\log_{\floor{(B-b)/b}}(\ceil{N/2B})} + 1)$
+  \item External sort with replacement sort, blocked I/O, and double buffering: $2N(\ceil{\log_{\floor{(B-2b)/2b}}(\ceil{N/2B})} + 1)$
+  \item Selection $\sigma_{\phi}(R)$ no index, unsorted: $M$
+  \item Selection $\sigma_{\phi}(R)$ no index, sorted: $\log_2(M) + O_b$
+  \item Selection $\sigma_{\land \phi_i}(R)$ clustered B+ tree index: $\log_F(M) + O_b$ most selective
+  \item Selection $\sigma_{\land \phi_i}(R)$ unclustered B+ tree index: $\log_F(M) + O_t$ most selective
+  \item Selection $\sigma_{\land \phi_i}(R)$ clustered hash index: $H + O_b$ most selective
+  \item Selection $\sigma_{\land \phi_i}(R)$ unclustered hash index: $H + O_t$ most selective
+  \item Selection $\sigma_{\land \phi_i}(R)$ multiple indexes + rid intersection: Sum of index retrievals plus sum of intersection + sum of retrieval
+  \item Selection $\sigma_{\lor \phi_i}(R)$ one disjunct requires full table scan: full table scan
+  \item Selection $\sigma_{\lor \phi_i}(R)$ all disjuncts have indexes: rid union
+  \item Selection $\sigma_{\land (\lor \phi_i)_j}(R)$ some conjuncts have indexes: rid intersection on indexes
+  \item project with duplicate elimination sort based: $M$ + $T$ + time to sort $T$ + $T$
+  \item project with duplicate elimination fancy sort based: time to sort $M$
+  \item project with duplicate elimination hash based no recursion: $M$ + $T$ + $T$
+  \item project with duplicate elimination index-only scan: $\log_F(M) + O_i$
+  \item SNLJ $M + p_R M N = M + n_RN$
+  \item PNLJ $M + M N$ (outer smaller)
+  \item BNLJ $M + \ceil{M/(B-2)}N$ (outer smaller, roughly)
+  \item INLJ clustered $M + \sum_{t \in R} \text{index cost + num matching pages}$
+  \item INLJ unclustered $M + \sum_{t \in R} \text{index cost + num matching tuples}$
+  \item SMJ time to sort $R$ + time to sort $S$ + $O(N + M)$ if no partition of $S$ is read more than once. Up to $O(N*M)$ on the last step.
+  \item SMJ refinement with $B > 2\sqrt{L}$ buffers: $3(M + N)$.
+  \item grace hash join: $3(M + N)$ if every partition fits in memory; recurse otherwise; smaller relation partitions in memory
+  \item hybrid hash join: if $B > M/k$ for some $k$ and $B - (k + 1) > M/k$, then we partition into $k$ buckets but build the first partition in memory. Cost is $M + N + 2(m + n)$
+  \item intersection full equality join
+  \item cross no equality join
+  \item sort and hash for union and difference (with sort merge refinement)
+  \item sort and hash group by
+\end{itemize}
+\end{document}
