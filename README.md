@@ -498,6 +498,23 @@
 
 # 4. Transactions
 ### ARIES: A Transaction Recovery Method Supporting Fine-Granularity Locking and Partial Rollbacks Using Write-Ahead Logging
+- WAL protocol: every change to a data object needs a record in a log; the
+  record gets flushed before the corresponding change to the data item.
+- WAL is faster that force approach because data changes are smaller than the
+  pages being changed and the log is append-only.
+- Periodically flushing pages to disk helps speed up recovery because the
+  recLSNs will be bigger and we don't have to go back as far.
+- Checkpoint location is stored in the *master record*.
+- end records are written for committed transactions at the end of the redo phase
+- Shadow paging:
+    - Access pages through page table
+    - Transactions copy page table, copy pages, and swap page table upon commit
+- Disadvantages of shadow paging:
+    - Fragmentation leads to bad locality
+    - Lower degrees of concurrency
+    - Storage overhead of shadow pages
+    - Recovery can lead to deadlocks
+
 ### Granularity of locks and degrees of consistency in a shared data base
 ### Concurency Control in Distributed Database Systems
 - Database model
