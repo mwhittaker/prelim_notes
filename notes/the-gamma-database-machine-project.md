@@ -1,0 +1,26 @@
+# The Gamma Database Machine Project
+- Software architecture
+    - Horizontal parititioning with round robin, hash, or range
+    - Catalog manager, query manager, scheduler, operator processes
+    - Queries embedded in C or issued ad-hoc
+    - Standard relational optimizer with distributed joins
+    - Operators act as single node operators with split table attached
+- Query processing algorithms
+    - Selection trivial
+    - Distributed SMJ, Grace hash, simple hash, and hybrid hash equijoins
+    - Distributed hybrid hash join implementation (k disks, m procs)
+    - Distributed group by (local agg then hash grouping keys)
+    - Insert standard w/ movement when partitioning key changed
+- Concurrency control
+    - S, X, IS, IX, SIX file and page locks
+    - Local deadlock detectors plus periodic global detector (time halved
+      and doubled)
+- Recovery
+    - Updates create globally unique LSNs
+    - Log entries sent to centralized log managers
+    - Log manager sends flushed LSNs back to operators
+    - Scheduler sends commit or abort to log managers
+    - On abort, operators get aborted entries from log manager
+    - Keep extra pages around to avoid waiting on log manager
+- Fault tolerance
+   - Chained vs interleaved declustering

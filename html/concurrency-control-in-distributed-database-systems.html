@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="concurrency-control-in-distributed-database-systems">Concurrency Control in Distributed Database Systems</h1>
+<ul>
+<li>Database model
+<ul>
+<li>Each site runs a transaction manager (TM) and database manager (DM)</li>
+<li>A txn talks to a TM which talks to DMS</li>
+<li>Logical value X stored in replicas x1, ..., xn</li>
+</ul></li>
+<li>Decomposition of the CC problem
+<ul>
+<li>Execution is modelled as a set of logs for each DM</li>
+<li>Define conflict serializability</li>
+</ul></li>
+<li>2PL synchronization techniques
+<ul>
+<li>Basic 2PL: read lock on one stored value, write locks on all</li>
+<li>Primary Copy 2PL: read lock and write lock on primary copy</li>
+<li>Voting 2PL (ww): wait for a majority of write locks</li>
+<li>Centralized 2PL: all locks to single DM</li>
+<li>Deadlock detection and prevention:
+<ul>
+<li>Wound-wait and wait-die</li>
+<li>Conservative 2PL</li>
+<li>Centralized and hierarchical deadlock detection</li>
+<li>Phantom deadlocks caused by other aborts</li>
+</ul></li>
+</ul></li>
+<li>Timestamp ordering synchronization techniques (with weird buffering)
+<ul>
+<li>Timestamp ordering</li>
+<li>Thomas write rule</li>
+<li>Multiversion timestamp ordering</li>
+<li>Conservative timestamp ordering
+<ul>
+<li>All TMs send requests in increasing timestamp order</li>
+<li>All operations block on one with minimum timestamp</li>
+<li>Transaction classes and conflict graphs</li>
+</ul></li>
+<li>Garbage collection and conservative restart</li>
+</ul></li>
+<li>CC Methods
+<ul>
+<li>Pure 2PL
+<ul>
+<li>{basic, primary copy, centralized} x {basic, primary copy, centralized, voting}</li>
+<li>Read lock, rw write lock, ww write lock, rww write lock</li>
+</ul></li>
+<li>Pure TO</li>
+<li>Mixed
+<ul>
+<li>Every item has a lock time and a txn is assigned a time larger than all lock times</li>
+<li>Basic 2PL rw + TWW ww:
+<ul>
+<li>Reads and writes aquire read locks and ww locks</li>
+<li>Data items tagged with write timestamps</li>
+<li>After all prewrites, get a timestmp and check all writes</li>
+<li>Writes don't block writes</li>
+</ul></li>
+<li>TO rw + 2PL ww
+<ul>
+<li>Conservatively issue all prewrites and get a timestamp</li>
+<li>Reads block if a buffered prewrite exists with a lock time less than the txn's timestamp</li>
+<li>Writes never block</li>
+<li>Read-only queries can run at any timestamp</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

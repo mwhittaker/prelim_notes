@@ -1,0 +1,14 @@
+# Datalog and Recursive Query Processing (Sections 1-3, 6)
+- Syntax
+- Three semantics: model, lfp, proof
+- Semi-postive datalog with negation and stratified datalog with negation
+- Stratified datalog with negation and aggregation
+- Naive and semi-naive evaluation
+- Query-subquery evaluation
+- Magic sets
+- Applications
+    - Program analysis
+    - Declarative networking
+    - Data integration and exchange
+    - Enterprise software
+    - Concurrent programming

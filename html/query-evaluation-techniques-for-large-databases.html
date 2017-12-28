@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="query-evaluation-techniques-for-large-databases">Query Evaluation Techniques for Large Databases</h1>
+<ul>
+<li>Sorting
+<ul>
+<li>Non-uniform block sizes and forecasting</li>
+<li>Dynamically adjusted block sizes to balance I/O and CPU</li>
+<li>Smarter merging when the number of runs is not a multiple of the number of blocks.</li>
+<li>Smaller fanout for the last merge so it doesn't consume too much memory when fed into parent</li>
+</ul></li>
+<li>Hashing
+<ul>
+<li>Merge small overflow buckets together if needed</li>
+<li>Hybrid hash join: build a hash table in memory and dynamically spill things out to disk. Three options:
+<ul>
+<li>Write a fixed fraction of the hash table to disk</li>
+<li>Bucket tuning and dynamic destaging: write lots of small buckets to disk which later get merged. Spill biggest partitions to disk.</li>
+<li>Use precomputed stats</li>
+</ul></li>
+</ul></li>
+<li>Aggregation and duplicate removal
+<ul>
+<li>Nested loop algorithm: for each tuple, scan output groups/relation</li>
+<li>Sort approach is good for rollups</li>
+</ul></li>
+<li>Joins
+<ul>
+<li>SMJ can be performed on two indexes</li>
+<li>Heap-filter merge-join: sort smaller inner relation; process replacement sorted blocks on the output relation and merge with inner.</li>
+</ul></li>
+<li>Division: R(A, B) and S(B)
+<ul>
+<li>Direct sort-based method: sort R and S. Scan over R and repeatedly scan over S. Emit tuples in R that match everything in S.</li>
+<li>Direct hash-based method: Create a hash table indexing tuples s_1, ..., s_n in S. Assign n-length bitvector for each tuple in R and record which tuples match everything in S.</li>
+<li>Divisor (denominator) partitioning: partition S and output tuples that match all parts of S.</li>
+<li>Quotient (numerator) partitioning: partition R and output tuples that match any partition.</li>
+</ul></li>
+<li>Duality of hash and sort
+<ul>
+<li>Merging and partitioning are duals.</li>
+<li>Sorting is good because it produces interesting orders; it's bad because the fanout depends on the size of the larger relation and it is algorithmically slower</li>
+<li>Hashing is good because it depends on the size of the smaller relation and is algorithmically faster; bad because of skew and no interesting orders</li>
+</ul></li>
+<li>Execution of complex query plans
+<ul>
+<li>Complex plans have multiple operators open at once</li>
+<li>Right deep plans can build hash tables on left base tables concurrently</li>
+<li>Ingres style: repeatedly run and materialize one (or more) operator at a time; use stats for later parts of plan.</li>
+</ul></li>
+<li>Mechanisms for parallel query execution
+<ul>
+<li>Speedup vs scaleup</li>
+<li>Distributed (multiple independent databases) vs parallel (one database managing multiple compute nodes)</li>
+<li>Interquery vs (vertical vs bushy) inter-operator vs intra-operater</li>
+<li>Bracket (all tuples sent via IPC) vs operator</li>
+<li>Shared nothing vs shared disk vs shared nothing (+ hybrid)</li>
+</ul></li>
+<li>Parallel algorithms
+<ul>
+<li>Sort
+<ul>
+<li>Range partition across nodes, then each node sorts</li>
+<li>Locally sort, then range partition and send sorted runs, nodes merge received sorted runs</li>
+<li>Deadlock is possible if results are merged without buffering</li>
+</ul></li>
+<li>Equijoin
+<ul>
+<li>Partitioned symmetric hash join</li>
+<li>Distributed Grace join (ala Gamma)</li>
+<li>Partition the bigger relation and fully replicate the smaller</li>
+<li>Lucja Kot bloom filter semijoin</li>
+</ul></li>
+<li>Join
+<ul>
+<li>Symmetric fragment and replicate (grid join)</li>
+</ul></li>
+</ul></li>
+<li>Non-standard query processing algorithms
+<ul>
+<li>Nested relations: unnest and nest</li>
+<li>Scientific and time series
+<ul>
+<li>Band join (R.a - c &lt;= S.a &lt;= R.a + c) with modified sort or hash join</li>
+</ul></li>
+<li>ODBMS</li>
+<li>Control operators
+<ul>
+<li>store-and-scan (cache)</li>
+<li>split (buffering + disk spill)</li>
+<li>Active scheduler (arrows pointing away) vs passive scheduler (a la Click)</li>
+<li>choose-plan Ingres style</li>
+</ul></li>
+</ul></li>
+<li>Advanced techniques
+<ul>
+<li>Precomputation: views, join indexes, indexe</li>
+<li>Compression
+<ul>
+<li>Index key compression and straight up compression</li>
+<li>Less I/O, computation on compressed data, minimize skew</li>
+</ul></li>
+<li>Surrogates
+<ul>
+<li>Don't copy tuples, just point to them</li>
+</ul></li>
+<li>Bloom filters</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

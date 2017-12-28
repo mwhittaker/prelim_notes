@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="c-store-a-column-oriented-dbms">C-Store: a Column-Oriented DBMS</h1>
+<ul>
+<li>Data model
+<ul>
+<li>Data stored as sorted projections range partitioned on sort key (e.g. R(a, b))</li>
+<li>Projections stored column-by-column</li>
+<li>Each entry in a projection is assigned a projection-unique storage key (stored explicitly in WS but not RS)</li>
+<li>Join index matches up one projection to the segment and storage key of the matching tuples in another projection</li>
+</ul></li>
+<li>RS
+<ul>
+<li>Columns in RS compressed based on sorted and number of values</li>
+<li>Self-ordered, few values: dense B+ tree mapping v to (v, offset, count)</li>
+<li>Foreign-ordered, few values: dense B+ tree mapping b to bitmap</li>
+<li>Self-ordered, many values: delta encoded</li>
+<li>Foreign-ordered, many values: uncompressed</li>
+</ul></li>
+<li>WS
+<ul>
+<li>Same storage format as RS</li>
+<li>Projections range partitioned same way</li>
+<li>Larger storage key assigned to each tuple</li>
+<li>B+ tree sort key to storage key and storage key to sort key</li>
+</ul></li>
+<li>Updates and transactions
+<ul>
+<li>Tuples tagged with insertion and deletion epoch</li>
+<li>Low and high water mark set query interval</li>
+<li>Every tuple in RS was inserted before low watermark</li>
+<li>Single timestamp authority increments epochs</li>
+</ul></li>
+<li>Recovery
+<ul>
+<li>Two-phase commit but no prepare messages are sent</li>
+<li>Recovering nodes gather information from other projections on other nodes</li>
+<li>Really complicated part of the paper</li>
+</ul></li>
+<li>Tuple mover
+<ul>
+<li>Tuple mover moves tuples from WS into RS deleting those removed before low watermark</li>
+<li>Timestamp authority periodically increments low watermark</li>
+</ul></li>
+<li>Query optimizer
+<ul>
+<li>Algorithms for e.g. decompressing, bitmap logic, applying bitmaps, concatenating projections etc</li>
+<li>Optimizer has to take into account the cost of decompressing and which projections to use</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

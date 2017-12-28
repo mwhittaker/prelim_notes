@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="a-history-and-evaluation-of-system-r">A History and Evaluation of System R</h1>
+<ul>
+<li>Phase 0
+<ul>
+<li>Single-user PL/I SQL interpreter with no concurrency or recovery</li>
+<li>Planned throwaway</li>
+<li>Subqueries but no joins</li>
+<li>Focus on refining SQL interface</li>
+<li>Catalog as relations</li>
+<li>XRM storage layer with TIDs, tuples with pointers to domains, and inversions</li>
+<li>Optimizer minimized number of tuples</li>
+<li>Optimizer was CPU bound</li>
+<li>Joins are important and optimizer should optimize common case</li>
+</ul></li>
+<li>Phase 1
+<ul>
+<li>RDS (optimizer) and RSS (storage system)</li>
+<li>SQL or embedded queries + query compilation + catalog dependency tagging and recompilation</li>
+<li>RSS was row-store</li>
+<li>B+ trees, index scans, full table scans, tnlj, inl, smj</li>
+<li>Query optimizer weighted sum of RSS calls and IO using Selinger style I/O.</li>
+<li>Views stored as parse trees and used for authorization</li>
+<li>Logging and shadow pages</li>
+<li>Hierarchical intention locks + threw away predicate locks</li>
+</ul></li>
+<li>Phase 2
+<ul>
+<li>Evaluation</li>
+<li>Added EXISTS, LIKE, prepared statements, outer joins</li>
+<li>Optimizer evaluated with uniform independent data</li>
+<li>Shadow pages bad locality and extra book keeping</li>
+<li>RU, RC, and serializable; bad implementations and serializable mostly used</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

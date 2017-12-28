@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="managing-update-conflicts-in-bayou-a-weakly-connected-replicated-storage-system">Managing update conflicts in Bayou, a weakly connected replicated storage system</h1>
+<ul>
+<li>Eventually consistent gossip with user-defined write conflict resolution</li>
+<li>Meeting room example</li>
+<li>Dependency check SQL query + expected results</li>
+<li>Merge procedure rewrites query or logs errors on failure</li>
+<li>Writes timestamped and gossiped and executed in order immediately (might have to undo writes)</li>
+<li>Committed writes ordered before tentative writes</li>
+<li>Could commit once timestamp is greater than low watermark for all servers</li>
+<li>Bayou uses single master to decide commit</li>
+<li>Storage system
+<ul>
+<li>Write log of committed and tentative writes with garbage collection and care not to reintroduce write via old gossip</li>
+<li>Tuple store with bits for tentative or committed</li>
+<li>Undo log to undo stuff</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

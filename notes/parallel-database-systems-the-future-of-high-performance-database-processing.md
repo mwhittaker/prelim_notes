@@ -1,0 +1,13 @@
+# Parallel Database Systems: The Future of High Performance Database Processing
+- Pipeline vs partition parallelism
+- Speedup vs scaleup
+- Overheads to perfect scalability
+    - Startup
+    - Interference
+    - Skew
+- Shared nothing, shared disk, shared nothing
+- Limitations to pipeline parallelism in SQL
+    - Query plans not that deep
+    - Some operators (e.g. aggregates) cannot be pipelined
+    - Some operators take way longer than others
+- Round robin, range, and hash partitioning

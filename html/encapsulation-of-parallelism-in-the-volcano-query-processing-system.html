@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="encapsulation-of-parallelism-in-the-volcano-query-processing-system">Encapsulation of Parallelism in the Volcano Query Processing System</h1>
+<ul>
+<li>Limitations of bracket model (forced IPC overhead)</li>
+<li>Pipeline parallelism
+<ul>
+<li>Fork child, communicate through shared memory, semaphore for flow control</li>
+</ul></li>
+<li>Bushy parallelism: pipeline parallelism on siblings</li>
+<li>Intra-operator parallelism
+<ul>
+<li>Fork master producer which forks multiple producers</li>
+<li>All producers share same port</li>
+<li>Round robin, hash, or range partition data upwards</li>
+<li>Count end-of-stream to know when done</li>
+<li>Less obvious how to implement</li>
+</ul></li>
+<li>Merge can sit on top of sorted children</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

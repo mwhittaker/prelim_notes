@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="transaction-management-in-the-r-distributed-database-management-system">Transaction Management in the R* Distributed Database Management System</h1>
+<ul>
+<li>What's the point of 2PC
+<ul>
+<li>Imagine coordinator sends commit to everyone; one node commits, the other crashes and loses all of its data because it didn't force write anything</li>
+</ul></li>
+<li>Vanilla 2PC
+<ul>
+<li>coordinator force-write commits and aborts</li>
+<li>Subordinate force-writes prepares, commits, and aborts</li>
+</ul></li>
+<li>Hierarchical 2PC</li>
+<li>2PC with presumed abort
+<ul>
+<li>The second we know it's an abort, forget about the transaction</li>
+<li>Coordinate force-writes commits</li>
+<li>Subordinate force-write prepare and commit</li>
+<li>Only commits are acked</li>
+</ul></li>
+<li>2PC with presumed commit
+<ul>
+<li>Coordinate force-writes collecting and commit</li>
+<li>Subordinate force writes prepare and abort</li>
+<li>Aborts must be acked</li>
+<li>Coordinator crash between collecting and commit, assume abort</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

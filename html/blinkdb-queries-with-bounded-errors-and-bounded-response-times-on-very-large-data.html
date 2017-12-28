@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="blinkdb-queries-with-bounded-errors-and-bounded-response-times-on-very-large-data">BlinkDB: Queries with Bounded Errors and Bounded Response Times on Very Large Data</h1>
+<ul>
+<li>Existing approaches to approximation
+<ul>
+<li>Predictable queries =&gt; super legit sketching</li>
+<li>Predictable query predicates =&gt; good sampling</li>
+<li>Predictable query column sets =&gt; BlinkDB</li>
+<li>Unpredictable queries =&gt; online aggregation</li>
+</ul></li>
+<li>Built on HIVE</li>
+<li>SELECT-FROM-WHERE-GROUPBY-HAVING queries without joins or subqueries</li>
+<li>Confidence interval or latency as part of query</li>
+<li>Sampling
+<ul>
+<li>Stratified sample n_max elements on query column sets</li>
+<li>Store groups contiguously in blocks</li>
+<li>Latency or accuracy determines n</li>
+<li>n scales inversely proportional to root K</li>
+<li>Choose appropriate cap K to get exactly n elements &lt; n_max</li>
+</ul></li>
+<li>Selecting samples
+<ul>
+<li>Given a space constraint, choose all samples with same cap K</li>
+<li>Maximize product of probability of query, sparseness of query, and coverage</li>
+<li>Coverage is the likelihood that a grouping column values appears in a sample. For example, given the sample on (a, b, c), we know every unique value of (a, b) will show up. Given a sample on a, some values of (a, b) might show up, some might not</li>
+<li>If our sample isn't a perfect cover, we can still perform approximate queries, but our answers might be really bad</li>
+</ul></li>
+<li>Runtime
+<ul>
+<li>Choose smallest superset, or if no such set exists, run on subsamples and choose the one with the highest selectivity</li>
+<li>Run on a tiny subsample to estimate selectivity and runtime and then use stats close forms to choose a right sized subsample</li>
+<li>Store sampling rate to do things like COUNT</li>
+</ul></li>
+<li>Implementation
+<ul>
+<li>Compute uniform sample</li>
+<li>Periodically re-compute which samples to use</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

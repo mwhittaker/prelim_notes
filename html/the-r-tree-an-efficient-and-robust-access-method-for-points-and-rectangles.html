@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="the-r-tree-an-efficient-and-robust-access-method-for-points-and-rectangles">The R*-tree: an Efficient and Robust Access Method for Points and Rectangles</h1>
+<ul>
+<li>R-tree
+<ul>
+<li>Like a B+ tree but maps bounding boxes to RIDs</li>
+<li>Internal nodes contain bounding boxes of children</li>
+<li>Search searches multiple paths, whichever overlaps the query</li>
+<li>Insert searches down the path which requires least enlargement (ties broken by area) and potentially splits rearrange to minimize overlap</li>
+<li>Delete just deletes</li>
+</ul></li>
+<li>Optimization goals
+<ul>
+<li>Minimize rectangle area</li>
+<li>Minimize rectangle overlap</li>
+<li>Minimize rectangle perimeter</li>
+<li>Maximize storage utilization</li>
+</ul></li>
+<li>R-trees vary on find subchild and split
+<ul>
+<li>Original find subchild: choose one with minimum enlargement (break ties on area)</li>
+<li>Original split: minimize overlap</li>
+<li>Original split (quadratic approximation): choose two seeds which fill least area of bounding box, then repeatedly pick the other boxes that have the largest difference in area increase when assigned to both groups</li>
+<li>Greene's split: choose seeds as above and then divide in half along most distant axis</li>
+</ul></li>
+<li>R* tree find subchild
+<ul>
+<li>For internal nodes pointing at internal nodes, use original find</li>
+<li>For internal nodes pointing at children, choose child which increases overlap the least, breaking ties by least area increase and then least area. The overlap for a child is the sum of overlaps with all other children.</li>
+</ul></li>
+<li>R* tree split
+<ul>
+<li>For each axis, perform all splits where each split has at least m entries</li>
+<li>Compute the sum of perimeters for the bounding boxes of all splits</li>
+<li>Choose axis which minimizes perimeter</li>
+<li>Then choose the partition which minimizes overlap, ties broken by area</li>
+</ul></li>
+<li>Reinsert values (in decreasing order of how far away they are from the bounding box)</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

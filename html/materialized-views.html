@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="materialized-views">Materialized Views</h1>
+<ul>
+<li>View maintenance
+<ul>
+<li>Homomorphic select</li>
+<li>Distributive join</li>
+<li>Derivation counting for poject (a drawback of the algebra approach)</li>
+<li>Drawbacks of delta tables (top-k query and group by sum)</li>
+<li>Summary-delta encoding of changes (e.g. total sales per item and store)</li>
+<li>Optimizer should weigh updates against recomputation</li>
+<li>We can maintain multiple views at once sometimes faster than all of them individually</li>
+<li>Different views require different amounts of data (sometimes deltas, sometimes view, sometimes base data)</li>
+<li>It's preferable to not depend on everything to maintain a view</li>
+<li>Irrelevant updates (only look at deltas)</li>
+<li>Self-maintainable view (look at view, but don't look at base data)</li>
+<li>Runtime self-maintainable view (look at biew, but only look at base data sometimes)</li>
+<li>We can materialize views as more than just tables (e.g. join views with pointers into base tables)</li>
+<li>We can also maintain auxiliary views to speed up maintenace</li>
+<li>Immediate vs deferred update</li>
+<li>Imagine two transactions that update different rows in the same group; immediate update with write locks would have them conflict on the group (can use special locking protocols)</li>
+</ul></li>
+<li>Using views
+<ol style="list-style-type: decimal">
+<li>Can we answer a query with just views?</li>
+<li>Can we get a maximal subset of a query with just views?</li>
+<li>What is the fastest way to compute a query given views?</li>
+</ol>
+<ul>
+<li>For a particular candidate query, expand the views and test for equivalence or maximal containement</li>
+<li>Optimizer needs a view matching mechanism to know which views can be used for which queries</li>
+<li>Data integration
+<ul>
+<li>Warehouse ETL style or mediated style over remote data</li>
+<li>Local as-view (LAV) define local schemas as views over global schema and perform query rewrites to use views</li>
+<li>Global as-view (GAB) define global schema s view over local schemas and perform view expansion</li>
+</ul></li>
+</ul></li>
+<li>Selecting views to materialize
+<ul>
+<li>Define a performance metric (e.g. time for a given set of queries) and a resource limit (e.g. space for views or time for maintenace)</li>
+<li>OLAP cube queries: materialize a subset of the cube</li>
+<li>In general, the problem is very hard</li>
+<li>Need to limit the search space of views based on what the optimizer can handle and in general to make search feasible</li>
+</ul></li>
+<li>Connections
+<ul>
+<li>Data stream processing</li>
+<li>Approximate query processing</li>
+<li>Scalable continuous query processing (see which updates trigger which views/triggers)</li>
+<li>Caching</li>
+<li>Indexes</li>
+<li>Provenance (derivation counting is like provenance)</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

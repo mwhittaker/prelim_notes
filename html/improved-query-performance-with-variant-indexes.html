@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="improved-query-performance-with-variant-indexes">Improved Query Performance with Variant Indexes</h1>
+<ul>
+<li>Value-List indexes
+<ul>
+<li>B+ tree index with RID list or bitmap at leaves</li>
+<li>If there are a small number of keys, then the bitmap uses less space</li>
+</ul></li>
+<li>Projection indexes
+<ul>
+<li>A column of a table stored contiguously (like columnar storage)</li>
+</ul></li>
+<li>Bit-Sliced indexes
+<ul>
+<li>Values viewed as list of bits and stored column-by-column</li>
+</ul></li>
+<li>SELECT SUM(c) FROM R WHERE p
+<ul>
+<li>Assume bitmap fp</li>
+<li>No index: full table scan, filtering out using fp</li>
+<li>Value-List bitmap index: for each k, compute fk and then k * popcount(fk and fp)</li>
+<li>Bit-sliced index: for each i, 2^i * popcount(fp and ci).</li>
+</ul></li>
+<li>SELECT * FROM R WHERE c &gt; 100 and p
+<ul>
+<li>Assume bitmap fp</li>
+<li>No index: full table scan</li>
+<li>Value-List bitmap: (OR of all bitmaps for c &gt; 10) AND fp</li>
+<li>Projection index: full column scan</li>
+<li>Bit-sliced index: intense bit tricks</li>
+</ul></li>
+<li>GROUP BY (A, B)
+<ul>
+<li>Value-List index: for each fa for A and fb in B, compute (fa AND fb) and use it to compute the GROUP BY</li>
+<li>Projection index: Perform the GROUP BY like normal but only look at the relevant columns</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

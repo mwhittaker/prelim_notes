@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="on-the-computation-of-multidimensional-aggregates">On the Computation of Multidimensional Aggregates</h1>
+<ul>
+<li>Cubes, cuboids, and base cuboid</li>
+<li>Homomorphic aggregation functions</li>
+<li>Three methods for computation
+<ul>
+<li>Independent: compute all cuboids from base cuboid</li>
+<li>Parent: iteratively compute every cuboid from its parent</li>
+<li>Overlap: perform parent method in parallel</li>
+</ul></li>
+<li>Sorted run (matching l columns, l projected out)</li>
+<li>Partition (matching l-1 columns, l projected out)</li>
+<li>Choose parent with dropped attribute furthest right (e.g. R(A,C) wants R(A,C,D), instead of R(A,B,C))</li>
+<li>If partitions fit in memory, we can compute in one pass and pipeline</li>
+<li>Otherwise, we write sorted runs to disk and merge them later</li>
+<li>Allocating which cuboids to run at once is NP-complete; breadth-first search left-to-right heuristic</li>
+<li>Combine runs from later partitions into runs from earlier partitions</li>
+<li>Make right cuboids small and sort attributes in decreasing order of distinct values to minimize the number of sorted runs</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

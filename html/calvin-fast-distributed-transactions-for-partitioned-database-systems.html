@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="calvin-fast-distributed-transactions-for-partitioned-database-systems">Calvin: Fast Distributed Transactions for Partitioned Database Systems</h1>
+<ul>
+<li>Avoiding two-phase commit
+<ul>
+<li>2PC aborts because of crashes and because of logical aborts</li>
+<li>If we replicate each node, then we can ensure a node never crashes</li>
+<li>To replicate txns, we need determinism</li>
+<li>Logical aborts only require one round of communication, not two</li>
+</ul></li>
+<li>Architecture: sequencer, schedulers, and storage</li>
+<li>Sequencing epochs and Paxos replication</li>
+<li>Two-phase locking respecting the log</li>
+<li>Execution in which local reads are broadcast</li>
+<li>Optimistic lock location prediction (OLLP) for determining read sets</li>
+<li>Prefetch pages for txns that haven't even run yet</li>
+<li>Zig-zag checkpoint in which all writes after a point in the global log are written elsewhere</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

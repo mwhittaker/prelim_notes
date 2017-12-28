@@ -1,0 +1,47 @@
+# Concurrency Control in Distributed Database Systems
+- Database model
+    - Each site runs a transaction manager (TM) and database manager (DM)
+    - A txn talks to a TM which talks to DMS
+    - Logical value X stored in replicas x1, ..., xn
+- Decomposition of the CC problem
+    - Execution is modelled as a set of logs for each DM
+    - Define conflict serializability
+- 2PL synchronization techniques
+    - Basic 2PL: read lock on one stored value, write locks on all
+    - Primary Copy 2PL: read lock and write lock on primary copy
+    - Voting 2PL (ww): wait for a majority of write locks
+    - Centralized 2PL: all locks to single DM
+    - Deadlock detection and prevention:
+        - Wound-wait and wait-die
+        - Conservative 2PL
+        - Centralized and hierarchical deadlock detection
+        - Phantom deadlocks caused by other aborts
+- Timestamp ordering synchronization techniques (with weird buffering)
+    - Timestamp ordering
+    - Thomas write rule
+    - Multiversion timestamp ordering
+    - Conservative timestamp ordering
+        - All TMs send requests in increasing timestamp order
+        - All operations block on one with minimum timestamp
+        - Transaction classes and conflict graphs
+    - Garbage collection and conservative restart
+- CC Methods
+    - Pure 2PL
+        - {basic, primary copy, centralized} x {basic, primary copy,
+          centralized, voting}
+        - Read lock, rw write lock, ww write lock, rww write lock
+    - Pure TO
+    - Mixed
+        - Every item has a lock time and a txn is assigned a time larger
+          than all lock times
+        - Basic 2PL rw + TWW ww:
+            - Reads and writes aquire read locks and ww locks
+            - Data items tagged with write timestamps
+            - After all prewrites, get a timestmp and check all writes
+            - Writes don't block writes
+        - TO rw + 2PL ww
+            - Conservatively issue all prewrites and get a timestamp
+            - Reads block if a buffered prewrite exists with a lock time
+              less than the txn's timestamp
+            - Writes never block
+            - Read-only queries can run at any timestamp

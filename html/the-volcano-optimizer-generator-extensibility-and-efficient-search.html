@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="the-volcano-optimizer-generator-extensibility-and-efficient-search">The Volcano Optimizer Generator: Extensibility and Efficient Search</h1>
+<ul>
+<li>Design principles
+<ul>
+<li>Lots of domains modelled with algebras</li>
+<li>Pattern matching is good</li>
+<li>Don't use IRs</li>
+<li>Compile plans rather than interpret</li>
+<li>Use DP</li>
+</ul></li>
+<li>Inputs
+<ul>
+<li>Logical operators</li>
+<li>Physical algorithms</li>
+<li>Logical to logical transformation rules</li>
+<li>Logical to physical transformation rules</li>
+<li>Enforcers (algorithms that don't correspond to logical operator)</li>
+<li>Abstract cost data type and cost function for algorithms</li>
+<li>Logical and physical properties data type and function for extracting properties of expressions and plans</li>
+<li>Applicability function saying whether a given algorithm can implement an expression with the given physical properties and the physical requirements on its inputs</li>
+</ul></li>
+<li>Search algorithm
+<ul>
+<li>Parameterized on logical expression, physical properties, and cost limit</li>
+<li>3 moves: logical to logical, logical to physical, and enforcer</li>
+<li>Memoize (logical expression, physical properties) -&gt; best plan</li>
+<li>A couple of tricks to avoid infinite loops and to speed things up
+<ul>
+<li>In progress flags</li>
+<li>Know when some physical properties imply others</li>
+</ul></li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

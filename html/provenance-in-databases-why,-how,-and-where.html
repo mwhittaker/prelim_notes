@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="provenance-in-databases-why-how-and-where">Provenance in databases: Why, How, and Where</h1>
+<ul>
+<li>Lineage
+<ul>
+<li>\bot vs empty lineage</li>
+<li>unique even for rewrites assuming queries don't have repeated relations</li>
+<li>WHIPS lazy lineage via reverse queries (1 reverse quer for simple queries, multiple for complex queries)</li>
+</ul></li>
+<li>Why-provenance
+<ul>
+<li>Witnesses (subset sufficient to produce tuple)</li>
+<li>Proof witnesses and witness basis</li>
+<li>Size of proof bounded by size of query</li>
+<li>Minimal witnesses = minimal why provenance</li>
+<li>View deletion with 2 objectives: minimize changes to view and minimze changes to database</li>
+</ul></li>
+<li>How-provenance
+<ul>
+<li>Union and projection sum; join multiplies</li>
+<li>Provenance is N[TupleLoc] polynomial ring</li>
+<li>K-relational algebra subsumes relational and set algebra</li>
+</ul></li>
+<li>Trio
+<ul>
+<li>Store likelihood and and/or provenance with each tuple</li>
+<li>Likelihood is derived from and/or provenance</li>
+</ul></li>
+<li>Provenance semirings and recursion
+<ul>
+<li>N^\inf[TupleLoc] power series provenance</li>
+<li>Proof based (infinite sum of products of leafs of proofs) and least fixpoint (set of recursive equations)</li>
+<li>ORCHESTRA and Routes/Spider
+<ul>
+<li>Schema mapping</li>
+<li>ORCHESTRA stores mapping provenance for trust filtering and incremental updates</li>
+<li>Spider has routes which show how tuples were derived too; for debugging</li>
+</ul></li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

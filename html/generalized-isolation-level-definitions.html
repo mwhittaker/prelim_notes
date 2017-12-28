@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="generalized-isolation-level-definitions">Generalized Isolation Level Definitions</h1>
+<ul>
+<li>Degrees of consistency
+<ul>
+<li>English definitions</li>
+<li>Degree 1: read uncommitted, long write locks, no read locks</li>
+<li>Degree 2: read committed, long write locks, short read locks</li>
+<li>Degree 3: serializable, long write locks, long read (phantom) locks</li>
+</ul></li>
+<li>ANSI SQL Standard
+<ul>
+<li>English definitions</li>
+<li>All wrong</li>
+</ul></li>
+<li>Critique of ANSI SQL
+<ul>
+<li>Semi-formal definitions</li>
+<li>P0: dirty write</li>
+<li>P1: dirty read</li>
+<li>P2: non-repeatable read</li>
+<li>P3: phantom</li>
+<li>RU: No P0</li>
+<li>RC: No P0, P1</li>
+<li>RR: No P0, P1, P2</li>
+<li>Serializable: No P0, P1, P2, P3</li>
+</ul></li>
+<li>Adya
+<ul>
+<li>No multi-versioning</li>
+<li>Prevents some schedules which are conflict serializable</li>
+<li>DB model
+<ul>
+<li>Read and write multiple versions</li>
+<li>Predicates return version set</li>
+</ul></li>
+<li>Dependency graphs
+<ul>
+<li>Read dependencies (wr) read version of someone else or read a predicate which was changed by someone else</li>
+<li>Write dependencies (ww) wrote next version</li>
+<li>Anti-dependency (rw) install next version or change predicate of something read by previous predicate</li>
+</ul></li>
+<li>G0: write cycle</li>
+<li>G1: read-write cycles, aborted reads, intermediate reads</li>
+<li>G2: any cycle</li>
+<li>Pl-1 (RU): no G0</li>
+<li>Pl-2 (RC): no G0/G1</li>
+<li>Pl-3 (S): no G0/G1/G2</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

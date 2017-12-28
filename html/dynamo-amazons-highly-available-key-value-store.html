@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="dynamo-amazons-highly-available-key-value-store">Dynamo: Amazon's highly available key-value store</h1>
+<ul>
+<li>Availability over performance</li>
+<li>System interface
+<ul>
+<li>Key-value store with blob values</li>
+<li>get(key) -&gt; (value list, context)</li>
+<li>put(key, context, value)</li>
+</ul></li>
+<li>Partitioning
+<ul>
+<li>Consistent partitioning with virtual nodes</li>
+</ul></li>
+<li>Replication
+<ul>
+<li>Replicate to (at most) N neighboring (non-virtual) nodes in the ring</li>
+</ul></li>
+<li>Data versioning
+<ul>
+<li>Every data item is annotated with a vector clock</li>
+<li>Writes and reads use W and R quorum style, so concurrent puts might conflict</li>
+<li>Users have to reconcile concurrent writes</li>
+<li>Shopping cart: concurrent delete and add, deleted item is re-inserted</li>
+</ul></li>
+<li>Failures
+<ul>
+<li>Sloppy quorum: if node is not free, write to one outside the preference list</li>
+</ul></li>
+<li>Preventing divergence
+<ul>
+<li>Nodes use gossip and Merkel trees to ensure they don't diverge</li>
+</ul></li>
+<li>Membership
+<ul>
+<li>Administrator has to manually add nodes</li>
+<li>Gossip membership so everyone knows the ring assignments</li>
+</ul></li>
+<li>Implementation:
+<ul>
+<li>Java SEDA implementation</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

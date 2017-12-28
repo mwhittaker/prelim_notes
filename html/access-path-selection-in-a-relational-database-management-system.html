@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="access-path-selection-in-a-relational-database-management-system">Access Path Selection in a Relational Database Management System</h1>
+<ul>
+<li>RSS storage format
+<ul>
+<li>Tuples from multiple tables in the same page</li>
+<li>Multiple pages form a segment</li>
+<li>SARGS</li>
+</ul></li>
+<li>cost = page fetches + (w * rsi calls)</li>
+<li>Selection factor estimation (assume everything is uniform)</li>
+<li>Output size is FROM size multiplied by selection factors</li>
+<li>RSI calls is FROM size multiplied by selection factors of sargable preds (assumes we look at every tuple once)</li>
+<li>Costs of clustered and unclustered indexes + full table scan</li>
+<li>Interesting orders</li>
+<li>Query optimization algorithm</li>
+<li>Interesting order equivalence classes</li>
+<li>Avoid cross joins</li>
+<li>Nested query evaluation and correlated subquery optimization (get unique values of correlated column)</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

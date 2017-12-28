@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="the-gamma-database-machine-project">The Gamma Database Machine Project</h1>
+<ul>
+<li>Software architecture
+<ul>
+<li>Horizontal parititioning with round robin, hash, or range</li>
+<li>Catalog manager, query manager, scheduler, operator processes</li>
+<li>Queries embedded in C or issued ad-hoc</li>
+<li>Standard relational optimizer with distributed joins</li>
+<li>Operators act as single node operators with split table attached</li>
+</ul></li>
+<li>Query processing algorithms
+<ul>
+<li>Selection trivial</li>
+<li>Distributed SMJ, Grace hash, simple hash, and hybrid hash equijoins</li>
+<li>Distributed hybrid hash join implementation (k disks, m procs)</li>
+<li>Distributed group by (local agg then hash grouping keys)</li>
+<li>Insert standard w/ movement when partitioning key changed</li>
+</ul></li>
+<li>Concurrency control
+<ul>
+<li>S, X, IS, IX, SIX file and page locks</li>
+<li>Local deadlock detectors plus periodic global detector (time halved and doubled)</li>
+</ul></li>
+<li>Recovery
+<ul>
+<li>Updates create globally unique LSNs</li>
+<li>Log entries sent to centralized log managers</li>
+<li>Log manager sends flushed LSNs back to operators</li>
+<li>Scheduler sends commit or abort to log managers</li>
+<li>On abort, operators get aborted entries from log manager</li>
+<li>Keep extra pages around to avoid waiting on log manager</li>
+</ul></li>
+<li>Fault tolerance</li>
+<li>Chained vs interleaved declustering</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

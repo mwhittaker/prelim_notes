@@ -1,0 +1,26 @@
+# The POSTGRES Next-Generation Database System
+- Data management vs object management vs knowledge management
+- Query language + multiple programming languages + few concepts
+- Data models
+    - Classes (with inheritance), instances, attributes, OIDs
+    - Base classes, derived classes, versions
+    - Base types, array types, compond types
+    - C functions, operators, POSTQUEL functions
+- POSTQUEL
+    - Subqueries, transitive closures, inheritance, time travel
+- Fast path
+    - Sometimes easier than constructing SQL + allows for optimization
+      tricks
+- Rules
+    - Rules for view maintenance, triggers, constraints, etc.
+    - Forward chaining and backward chaining
+    - Record-level and query rewrite implementations
+    - Deferred vs immediate and same txn vs different txn
+    - Using rules for views and versions
+- Storage system
+    - No-overwrite storage system
+    - Fast recovery (no need to undo) and historical queries
+- Implementation
+    - Process per query
+    - Table driven parser and optimizer
+    - Dynamically loaded types, operators, and functions

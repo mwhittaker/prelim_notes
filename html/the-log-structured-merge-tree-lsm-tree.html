@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="the-log-structured-merge-tree-lsm-tree">The log-structured merge-tree (LSM-tree)</h1>
+<ul>
+<li>2 component LSM-tree
+<ul>
+<li>C0 in-memory component (some sort of tree, not necessarily a B+ tree)</li>
+<li>C1 on-disk, densely-packed, contiguously-allocated B+ tree component</li>
+<li>Multi-page sections of C0 and C1 are merged together and written back to C1, sort of like bulk inserting</li>
+<li>Finds must read from C0 and then from C1</li>
+<li>Deletions tombstoned in C0</li>
+<li>Batch deletions can be deferred to when the portion of the deletes are brought into memory for merging</li>
+</ul></li>
+<li>Multi-component LSM-trees
+<ul>
+<li>Imagine a huge C1 and a small C0. The number of pages for a given range in C1 might be way bigger than the number of pages for C0. If so, we end up reading way too many pages</li>
+<li>Multi-component LSM trees has a series of increasingly large trees on disk</li>
+<li>There is a way to find the optimal sizes that is described in the paper, but its complicated</li>
+</ul></li>
+<li>Concurrency control
+<ul>
+<li>Must avoid conflicts that occur when
+<ul>
+<li>someone reads the part of a disk tree that is being merged,</li>
+<li>someone searches the memory tree when it is being modified, or</li>
+<li>when multiple merges on the same tree are taking place.</li>
+</ul></li>
+<li>Acquire read/write locks on the nodes of the disk trees</li>
+<li>Do normal CC on the in-memory tree</li>
+</ul></li>
+<li>Recovery
+<ul>
+<li>Rely on normal log</li>
+<li>When a checkpoint happens,
+<ul>
+<li>Finish all pending merges</li>
+<li>Write C0 to disk</li>
+<li>Flush all dirty disk components</li>
+<li>Record the LSN to restart from, the cursors of all components, and some other info.</li>
+</ul></li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

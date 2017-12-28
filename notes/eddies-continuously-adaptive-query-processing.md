@@ -1,0 +1,11 @@
+# Eddies: Continuously Adaptive Query Processing
+- Adaptability over best case performance
+- Synchronization barriers (sort-merge join)
+- Moments of symmetry (nested loop join)
+- Pre-optimization
+- Done and ready bits
+- Eddy as a wrapper around data sources and n operators
+- Each operator runs in its own thread with a message queue
+- Naive eddy: learn delay of operators by filling up message queues
+- Fast eddy: learn selectivities of operators using lottery scheduling
+- Dynamic performance and windowed lottery scheduling

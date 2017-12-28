@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="architecture-of-a-database-system">Architecture of a Database System</h1>
+<ul>
+<li>Process models
+<ul>
+<li>Process per request</li>
+<li>Thread per request</li>
+<li>Process pool</li>
+<li>admission control: external and internal</li>
+</ul></li>
+<li>Parallel architecture
+<ul>
+<li>Shared memory
+<ul>
+<li>Simple to use, no scale</li>
+</ul></li>
+<li>Shared nothing
+<ul>
+<li>Data skip, full backup, chained declustering</li>
+<li>Cheap and scalable; requires extra code for everything</li>
+</ul></li>
+<li>Shared disk
+<ul>
+<li>Cache coherency protocols</li>
+<li>Easy to handle partial failure, no scale</li>
+</ul></li>
+<li>NUMA
+<ul>
+<li>Affinity scheduling</li>
+</ul></li>
+<li>DBMS threads
+<ul>
+<li>Have to map user threads across multiple processes</li>
+</ul></li>
+</ul></li>
+<li>Relational query processor
+<ul>
+<li>Query parsing and authorization
+<ul>
+<li>Parse, typecheck, and authorize (or defer to runtime to share same query between multiple users)</li>
+</ul></li>
+<li>Query rewrite
+<ul>
+<li>View expansion</li>
+<li>Constant arithmetic evaluation</li>
+<li>Logical rewriting of predicates</li>
+<li>Semantic optimization (e.g. redundant join elimination)</li>
+<li>Subquery flattening</li>
+</ul></li>
+<li>Query optimizer
+<ul>
+<li>Plan space (e.g. not left deep)</li>
+<li>Selectivity estimation (e.g. histograms)</li>
+<li>Search algorithms (e.g. top-down cascades)</li>
+<li>Parallelization (two phase optimization: optimize then distribute)</li>
+<li>Auto-tuning</li>
+</ul></li>
+<li>Prepared stamements, cached query plans, and re-optimization (predictable performance vs self-tuning)</li>
+<li>Query executor
+<ul>
+<li>Iterators</li>
+<li>BP-tuples vs M-tuples</li>
+<li>INSERT, UPDATE, DELETE halloween problem and iterator invalidation</li>
+</ul></li>
+<li>Access methods
+<ul>
+<li>Search arguments (SARGS) and benefits (indexes: duh, heap file: CPU overheads avoided)</li>
+<li>Physical RIDs prohibit movement (unluess forward pointer); don't allow B+ tree primary storage; don't store physical RIDs in B+ trees; etc.</li>
+</ul></li>
+<li>Data warehouses
+<ul>
+<li>Bitmap indexes</li>
+<li>Bulk loading and version data with historical queries</li>
+<li>Materialized views</li>
+<li>Data cubes</li>
+<li>Snowflake schemas (fact tables, dimensions, multi-level star schema)</li>
+<li>Column stores</li>
+</ul></li>
+<li>Database extensibility
+<ul>
+<li>Abstract data types</li>
+<li>XML (custom DB vs ADT vs shredding)</li>
+<li>Full-text search</li>
+<li>Extensible optimizers</li>
+<li>Remote data sources</li>
+</ul></li>
+</ul></li>
+<li>Storage management
+<ul>
+<li>Spatial Control
+<ul>
+<li>Raw access (more control, less portable) vs file access (less control, more portable)</li>
+<li>Diminishing difference over time</li>
+</ul></li>
+<li>Temporal access
+<ul>
+<li>Correctness: need to flush in the right order at the right time</li>
+<li>Performance: DBMS does better prefetching and avoids double buffering</li>
+<li>mmap helps avoid problems</li>
+</ul></li>
+<li>Buffer pool
+<ul>
+<li>Frames, page to frame map, page to disk map, metadata</li>
+<li>Replacement policies better than LRU/Clock (e.g. LRU for full table scans, replacement policies that treat root B+ tree different than heap page)</li>
+</ul></li>
+</ul></li>
+<li>Concurrency control and recovery
+<ul>
+<li>Locking and latching
+<ul>
+<li>Lock table holds locks</li>
+<li>Latches are kept in memory next to thing being latched and are for internal use</li>
+<li>Differences:
+<ul>
+<li>Latches don't do two-phase</li>
+<li>Latches should nenever deadlock</li>
+<li>Latches are lighter weight</li>
+<li>Latches are not tracked</li>
+</ul></li>
+</ul></li>
+<li>Locking and logging in indexes
+<ul>
+<li>B+ tree concurrency: crabbing or B-link trees</li>
+<li>Physical structure logging: no need to undo effects invisible to txns (nested top actions)</li>
+<li>Next-key locks: physical surrogates for logical properties
+<ul>
+<li>Lock all indexes in range of index plus one mure; when inserting, acquire lock on next tuple.</li>
+</ul></li>
+</ul></li>
+<li>Interdependencies of transactional storage
+<ul>
+<li>Everything is intertwined (e.g. ARIES assumes 2PL, e.g. writing a recoverable access method is hard)</li>
+</ul></li>
+</ul></li>
+<li>Shared components
+<ul>
+<li>Catalog: stored as tables, cached in memory, often optimized</li>
+<li>Memory allocator
+<ul>
+<li>Context-based memory allocator allocates memory in labelled contexts</li>
+<li>Makes memory management easier without a garbage collector</li>
+<li>Can optimize allocation for certain types of operations</li>
+</ul></li>
+<li>Disk Management subsystems
+<ul>
+<li>Due to legacy, map table to multiple files or multiple disks</li>
+<li>Abstractions like RAID and SAN complicate things</li>
+</ul></li>
+<li>Replication services
+<ul>
+<li>Physical replication</li>
+<li>Trigger-based replication</li>
+<li>Log-based replication: log shipping and database mirroring</li>
+</ul></li>
+<li>Administration, monitoring, and utilities
+<ul>
+<li>Optimizer statistics gathering</li>
+<li>Physical reorganization and index construction</li>
+<li>Backup/export</li>
+<li>Bulk load</li>
+<li>Monitoring</li>
+</ul></li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

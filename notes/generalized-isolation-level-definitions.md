@@ -1,0 +1,37 @@
+# Generalized Isolation Level Definitions
+- Degrees of consistency
+    - English definitions
+    - Degree 1: read uncommitted, long write locks, no read locks
+    - Degree 2: read committed, long write locks, short read locks
+    - Degree 3: serializable, long write locks, long read (phantom) locks
+- ANSI SQL Standard
+    - English definitions
+    - All wrong
+- Critique of ANSI SQL
+    - Semi-formal definitions
+    - P0: dirty write
+    - P1: dirty read
+    - P2: non-repeatable read
+    - P3: phantom
+    - RU: No P0
+    - RC: No P0, P1
+    - RR: No P0, P1, P2
+    - Serializable: No P0, P1, P2, P3
+- Adya
+    - No multi-versioning
+    - Prevents some schedules which are conflict serializable
+    - DB model
+        - Read and write multiple versions
+        - Predicates return version set
+    - Dependency graphs
+        - Read dependencies (wr) read version of someone else or read a
+          predicate which was changed by someone else
+        - Write dependencies (ww) wrote next version
+        - Anti-dependency (rw) install next version or change predicate of
+          something read by previous predicate
+    - G0: write cycle
+    - G1: read-write cycles, aborted reads, intermediate reads
+    - G2: any cycle
+    - Pl-1 (RU): no G0
+    - Pl-2 (RC): no G0/G1
+    - Pl-3 (S): no G0/G1/G2

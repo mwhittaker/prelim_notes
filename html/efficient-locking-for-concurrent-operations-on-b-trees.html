@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="efficient-locking-for-concurrent-operations-on-b-trees">Efficient Locking for Concurrent Operations on B-trees</h1>
+<ul>
+<li>Example problem of B+ tree search without locks</li>
+<li>B-link tree high keys and sibling pointers</li>
+<li>Search algorithm: rightward walk without locks</li>
+<li>Insertion algorithm:
+<ul>
+<li>Search down without locks and remember stack</li>
+<li>Crab rightwards for leaf</li>
+<li>Walk up stack and crab rightwards</li>
+<li>At most 3 locks at any given point in time</li>
+</ul></li>
+<li>Deletion: let tree underflow</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

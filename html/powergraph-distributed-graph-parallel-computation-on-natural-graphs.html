@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="powergraph-distributed-graph-parallel-computation-on-natural-graphs">PowerGraph: Distributed Graph-Parallel Computation on Natural Graphs</h1>
+<ul>
+<li>Pregel: get messages, update state, and send messages</li>
+<li>GraphLab: update vertex and edge state directly</li>
+<li>Bad because time spent is proportional to degree of vertex</li>
+<li>Gather-Apply-Scatter model for PowerGraph
+<ul>
+<li>gather(Du, Duv, Dv) -&gt; accum</li>
+<li>sum(accum, accum) -&gt; accum</li>
+<li>apply(Du, accum) -&gt; Dunew</li>
+<li>scatter(Dunew, Duv, Dv) -&gt; Duvnew, accum</li>
+</ul></li>
+<li>When one vertex changes, re-running gather can be a pain, so we can send delta accumulator</li>
+<li>Explicit activation, bulk synchronous, and asynchronous execution</li>
+<li>Subsumes Pregel and GraphLab</li>
+<li>Pregel and GraphLab do edge cuts, GraphLab does vertex cut</li>
+<li>Gather in parallel, send to master vertex, apply and distribute, scatter in parallel</li>
+<li>Greedy algorithm for nice vertex cut</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

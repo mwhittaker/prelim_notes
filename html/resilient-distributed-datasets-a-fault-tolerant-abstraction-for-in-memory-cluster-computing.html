@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="resilient-distributed-datasets-a-fault-tolerant-abstraction-for-in-memory-cluster-computing">Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing</h1>
+<ul>
+<li>Like MapReduce and Dryad but with caching</li>
+<li>Like Pregel but more general purpose</li>
+<li>Bulk data processing, unlike shared memory</li>
+<li>Lineage for fast recovery</li>
+<li>Narrow and wide dependencies</li>
+<li>Schedule jobs with as many narrow deps as possible</li>
+<li>Store intermediate data on mappers (like MR)</li>
+<li>Re-run stuff when things fail</li>
+<li>Interpreter magic</li>
+<li>Evict partitions on an RDD level LRU; unless LRU is same RDD</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

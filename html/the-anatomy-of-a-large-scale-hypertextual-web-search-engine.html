@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="the-anatomy-of-a-large-scale-hypertextual-web-search-engine">The Anatomy of a Large-Scale Hypertextual Web Search Engine</h1>
+<ul>
+<li>Novel features
+<ul>
+<li>PageRank</li>
+<li>Associating anchor text with site pointed to</li>
+<li>Score words based on boldness</li>
+</ul></li>
+<li>Architecture
+<ul>
+<li>URL server to crawlers to repository</li>
+<li>Indexer builds forward index from repo</li>
+<li>URL resolver builds graph for pagerank</li>
+<li>Sorted inverts indexes</li>
+</ul></li>
+<li>Data structures
+<ul>
+<li>BigFiles</li>
+<li>Repository: fat file of HTML contents</li>
+<li>Document index: ISAM index into repo</li>
+<li>Lexicon: long list of words</li>
+<li>Hit lists, forward index, reverse index</li>
+</ul></li>
+<li>Crawling
+<ul>
+<li>Python program with 300 open connections, event loops, async IO, local DNS cache</li>
+<li>Most fragile part of whole operation</li>
+</ul></li>
+<li>Indexing
+<ul>
+<li>Custom HTML parser for exotic HTML</li>
+<li>Collects new words to add to lexicon and adds them in batch</li>
+</ul></li>
+<li>Search
+<ul>
+<li>Find words in index and rank them</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

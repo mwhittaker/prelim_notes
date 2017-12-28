@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="dataguides-enabling-query-formulation-and-optimization-in-semistructured-databases">Dataguides: Enabling Query Formulation and Optimization in Semistructured Databases</h1>
+<ul>
+<li>OEM
+<ul>
+<li>Possibly cyclic graph of objects in which each vertex has an object id and each edge is annotated with a label</li>
+<li>Designated root node</li>
+<li>Label path, data path, instance of data path, target set of label path</li>
+<li>Semi-structured, no schema</li>
+<li>SELECT Restaurant.Name WHERE Restaurant.Entree = 'Burger';</li>
+</ul></li>
+<li>A dataguide is an OEM object in which each label has exactly one data path</li>
+<li>Makes queries like &quot;is there a data path for this label&quot; much faster</li>
+<li>Multiple data guides exist, minimal is not always preferable (because updates and annotations)</li>
+<li>Say we want to associate information about target sets in the dataguide, putting it in the x reachable by l may be ambiguous</li>
+<li>A strong data guide is one in which two labels in the data guide lead to the same object if and only if they share the same target sets in the source</li>
+<li>Bijection between target sets and nodes</li>
+<li>Vanilla determinization procedure</li>
+<li>Incremental maintenance
+<ul>
+<li>Represent update as u.l.v</li>
+<li>Find subsets containing u and re-run determinization</li>
+</ul></li>
+<li>Interactive web UI expanding and collapsing DataGuide; can write simple filters</li>
+<li>DataGuide speeds up label queries, can be intersected with other sets of ids</li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

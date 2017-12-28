@@ -1,0 +1,11 @@
+# The Five Minute Rule Twenty Years Later
+- Derivation of five minute rule
+- Assumes flash is a cache between RAM and disk
+- 2009 5 minute rules
+    - 4 KB RAM/disk = 1.5 hours
+    - 64 KB RAM/disk = 5 minutes
+    - 4 KB RAM/flash = 15 minutes
+    - 4 KB flash/disk = 2.5 hours
+- Flash means checkpoints can be faster
+- Page size effect on B+ trees
+- Query processing has to to take flash/disk cost into account

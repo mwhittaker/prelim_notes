@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="the-postgres-next-generation-database-system">The POSTGRES Next-Generation Database System</h1>
+<ul>
+<li>Data management vs object management vs knowledge management</li>
+<li>Query language + multiple programming languages + few concepts</li>
+<li>Data models
+<ul>
+<li>Classes (with inheritance), instances, attributes, OIDs</li>
+<li>Base classes, derived classes, versions</li>
+<li>Base types, array types, compond types</li>
+<li>C functions, operators, POSTQUEL functions</li>
+</ul></li>
+<li>POSTQUEL
+<ul>
+<li>Subqueries, transitive closures, inheritance, time travel</li>
+</ul></li>
+<li>Fast path
+<ul>
+<li>Sometimes easier than constructing SQL + allows for optimization tricks</li>
+</ul></li>
+<li>Rules
+<ul>
+<li>Rules for view maintenance, triggers, constraints, etc.</li>
+<li>Forward chaining and backward chaining</li>
+<li>Record-level and query rewrite implementations</li>
+<li>Deferred vs immediate and same txn vs different txn</li>
+<li>Using rules for views and versions</li>
+</ul></li>
+<li>Storage system
+<ul>
+<li>No-overwrite storage system</li>
+<li>Fast recovery (no need to undo) and historical queries</li>
+</ul></li>
+<li>Implementation
+<ul>
+<li>Process per query</li>
+<li>Table driven parser and optimizer</li>
+<li>Dynamically loaded types, operators, and functions</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

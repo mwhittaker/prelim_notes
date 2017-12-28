@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="combining-systems-and-databases-a-search-engine-retrospective">Combining Systems and Databases: A Search Engine Retrospective</h1>
+<ul>
+<li>Tenets of databases
+<ul>
+<li>declarative query languages and optimization</li>
+<li>well-defined semantics</li>
+<li>strong fault tolerance</li>
+</ul></li>
+<li>Queries based on words and properties</li>
+<li>Documents ranked based on document quality and word-document scoring</li>
+<li>Crawler, indexer, server</li>
+<li>Store documents, inverted indexes, and term info in relations</li>
+<li>Compile logical queries to access paths</li>
+<li>Optimizer caches all intermediate results and re-uses cached results when possible</li>
+<li>Horizontally partition everything, compute local top-k results and then aggregate</li>
+<li>Optimization: compress inverted index</li>
+<li>Optimization: master lower bound top-k to prune</li>
+<li>Updates
+<ul>
+<li>Tuples swapped out by crawler in chunks (atomically rewriting version vectors)</li>
+<li>Small deletion cache for real-time deletes of bad results</li>
+</ul></li>
+<li>Fault tolerance
+<ul>
+<li>If a chunk is lost, it will be re-indexed</li>
+<li>Primary backup for faster recovery</li>
+<li>Gracefully degrade by looking at fewer chunks or rejecting expensive queries</li>
+</ul></li>
+<li>Misc
+<ul>
+<li>Personalization: cookie stores id of database entry</li>
+<li>Logging: search engines make a lot of logs and need custom database engines</li>
+<li>Query rewriting: rewrite query using context of current page</li>
+<li>Phrase queries: e.g. &quot;New York&quot; search engine need nearness metrics</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

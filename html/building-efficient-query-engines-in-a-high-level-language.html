@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prelim Notes</title>
+  <link href='../css/style.css' rel='stylesheet'>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id=header>
+    <a href="../">Prelim Notes</a>
+  </div>
+  <div id="container">
+<h1 id="building-efficient-query-engines-in-a-high-level-language">Building Efficient Query Engines in a High-Level Language</h1>
+<ul>
+<li>Template based query compilation misses a lot of optimization opportunities</li>
+<li>LegoBase uses LMS to compile Scala into partially evaluated Scala</li>
+<li>Architecture: compile using standard optimizer, then convert to Scala LMS plan, then produce more optimized Scala, and then convert to C</li>
+<li>Scala to C: straightforward except Scala libraries mapped to GLib and Scala code must manually mark allocations and deletions because C doesn't have a garbage collector</li>
+<li>Optimizations
+<ul>
+<li>push to pull</li>
+<li>eliminate redundant materializations</li>
+<li>data structure specialization (hash table to array)</li>
+<li>changing data layout (between row and column oriented)</li>
+</ul></li>
+</ul>
+  </div>
+
+  <script type="text/javascript" src="../js/mathjax_config.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# TAG: A tiny aggregation service for ad-hoc sensor networks
+- Motes running tiny OS form tree with increasing number broadcast
+- Periodic aggregate SQL queries
+- Aggregates expressed as initializer, merger, and final evaluator
+- Characterizing aggregates
+    - Duplicate sensitivity
+    - Exemplary vs summary
+    - Increasing
+    - Amount of state
+        - Distributive: evaluator is identity
+        - Algebraic: intermediate state is same size as identity
+        - Holistic: proportional to input data size
+        - Unique: proprtional to number of unique inputs
+        - Context-senstive: proportional to statistical property
+- Motes have catalog of attributes, returning NULL if queries for unknown attribute
+- Reduce aggregates upwards
+- Build table of groups, evicting if need be
+- Prune increasing having queries early
+- Send downwards with deadlines
+- Optimizations
+    - Snoop broadcast data and prune results early (e.g. hear about a bigger max)
+    - Create data at top that can be pushed down to filter results (hypothesis testing)
+- Nodes get new parent with best link quality when parent dies
+- 2 optimizations for fault tolerance
+    - Cache children values and re-send old ones
+    - Split aggregate in two and send to two parents (e.g. COUNT/2)
