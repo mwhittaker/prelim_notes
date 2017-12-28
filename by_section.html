@@ -5,8 +5,16 @@
   <link href='css/style.css' rel='stylesheet'>
   <meta name=viewport content="width=device-width, initial-scale=1">
   <style>
-    ul {
+    h1 {
+      font-size: 20px;
+      margin-bottom: 0pt;
+    }
+    ol, ul {
       margin-top: 0pt;
+      margin-bottom: 0pt;
+    }
+    li {
+
     }
   </style>
 </head>
@@ -20,104 +28,104 @@
 
   <div id="container">
     <h1>Basics and Foundational Systems</h1>
-    <ul>
+    <ol>
       <li><a href="html/architecture-of-a-database-system.html">Architecture of a Database System</a></li>
       <li><a href="html/the-five-minute-rule-twenty-years-later.html">The Five Minute Rule Twenty Years Later</a></li>
       <li><a href="html/a-history-and-evaluation-of-system-r.html">A History and Evaluation of System R</a></li>
       <li><a href="html/the-postgres-next-generation-database-system.html">The POSTGRES Next-Generation Database System</a></li>
       <li><a href="html/the-gamma-database-machine-project.html">The Gamma Database Machine Project</a></li>
-    </ul>
+    </ol>
 
     <h1>Query Processing</h1>
-    <ul>
+    <ol start="6">
       <li><a href="html/access-path-selection-in-a-relational-database-management-system.html">Access Path Selection in a Relational Database Management System</a></li>
       <li><a href="html/query-evaluation-techniques-for-large-databases.html">Query Evaluation Techniques for Large Databases</a></li>
       <li><a href="html/the-volcano-optimizer-generator-extensibility-and-efficient-search.html">The Volcano Optimizer Generator: Extensibility and Efficient Search</a></li>
       <li><a href="html/eddies-continuously-adaptive-query-processing.html">Eddies: Continuously Adaptive Query Processing</a></li>
       <li><a href="html/worst-case-optimal-join-algorithms.html">Worst-Case Optimal Join Algorithms</a></li>
       <li><a href="html/datalog-and-recursive-query-processing.html">Datalog and Recursive Query Processing</a></li>
-    </ul>
+    </ol>
 
     <h1>Transactions</h1>
-    <ul>
+    <ol start="12">
       <li><a href="html/aries-a-transaction-recovery-method-supporting-fine-granularity-locking-and-partial-rollbacks-using-write-ahead-logging.html">ARIES: A Transaction Recovery Method Supporting Fine-Granularity Locking and Partial Rollbacks Using Write-Ahead Logging</a></li>
       <li><a href="html/granularity-of-locks-and-degrees-of-consistency-in-a-shared-data-base.html">Granularity of Locks and Degrees of Consistency in a Shared Data Base</a></li>
       <li><a href="html/concurrency-control-in-distributed-database-systems.html">Concurrency Control in Distributed Database Systems</a></li>
       <li><a href="html/concurrency-control-performance-modeling-alternatives-and-implications.html">Concurrency control performance modeling: alternatives and implications</a></li>
-    </ul>
+    </ol>
 
     <h1>Indexing</h1>
-    <ul>
+    <ol start="16">
       <li><a href="html/efficient-locking-for-concurrent-operations-on-b-trees.html">Efficient Locking for Concurrent Operations on B-trees</a></li>
       <li><a href="html/improved-query-performance-with-variant-indexes.html">Improved Query Performance with Variant Indexes</a></li>
       <li><a href="html/the-r-tree-an-efficient-and-robust-access-method-for-points-and-rectangles.html">The R*-tree: An Efficient and Robust Access Method for Points and Rectangles</a></li>
       <li><a href="html/the-log-structured-merge-tree-lsm-tree.html">The log-structured merge-tree (LSM-tree)</a></li>
-    </ul>
+    </ol>
 
     <h1>DBMS Architectures Revisited</h1>
-    <ul>
+    <ol start="20">
       <li><a href="html/c-store-a-column-oriented-dbms.html">C-Store: a Column-Oriented DBMS</a></li>
       <li><a href="html/hekaton-sql-servers-memory-optimized-oltp-engine.html">Hekaton: SQL Servers Memory-Optimized OLTP Engine</a></li>
       <li><a href="html/calvin-fast-distributed-transactions-for-partitioned-database-systems.html">Calvin: Fast Distributed Transactions for Partitioned Database Systems</a></li>
       <li><a href="html/spanner-googles-globally-distributed-database.html">Spanner: Google's Globally-Distributed Database</a></li>
       <li><a href="html/building-efficient-query-engines-in-a-high-level-language.html">Building Efficient Query Engines in a High-Level Language</a></li>
-    </ul>
+    </ol>
 
     <h1>Distributed Data, Weak Isolation, Relaxed Consistency</h1>
-    <ul>
+    <ol start="25">
       <li><a href="html/transaction-management-in-the-r-distributed-database-management-system.html">Transaction Management in the R* Distributed Database Management System</a></li>
       <li><a href="html/generalized-isolation-level-definitions.html">Generalized Isolation Level Definitions</a></li>
       <li><a href="html/managing-update-conflicts-in-bayou-a-weakly-connected-replicated-storage-system.html">Managing update conflicts in Bayou, a weakly connected replicated storage system</a></li>
       <li><a href="html/dynamo-amazons-highly-available-key-value-store.html">Dynamo: Amazons highly available key-value store</a></li>
       <li><a href="html/cap-twelve-years-later-how-the-rules-have-changed.html">CAP Twelve Years Later: How the "Rules" Have Changed</a></li>
       <li><a href="html/consistency-analysis-in-bloom-a-calm-and-collected-approach.html">Consistency Analysis in Bloom: a CALM and Collected Approach</a></li>
-    </ul>
+    </ol>
 
     <h1>Parallel Dataflow</h1>
-    <ul>
+    <ol start="31">
       <li><a href="html/parallel-database-systems-the-future-of-high-performance-database-processing.html">Parallel Database Systems: The Future of High Performance Database Processing</a></li>
       <li><a href="html/encapsulation-of-parallelism-in-the-volcano-query-processing-system.html">Encapsulation of Parallelism in the Volcano Query Processing System</a></li>
       <li><a href="html/mapreduce-simplified-data-processing-on-large-clusters.html">MapReduce: simplified data processing on large clusters</a></li>
       <li><a href="html/tag-a-tiny-aggregation-service-for-ad-hoc-sensor-networks.html">TAG: A tiny aggregation service for ad-hoc sensor networks</a></li>
       <li><a href="html/resilient-distributed-datasets-a-fault-tolerant-abstraction-for-in-memory-cluster-computing.html">Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing</a></li>
-    </ul>
+    </ol>
 
     <h1>The Web and Databases</h1>
-    <ul>
+    <ol start="36">
       <li><a href="html/combining-systems-and-databases-a-search-engine-retrospective.html">Combining Systems and Databases: A Search Engine Retrospective</a></li>
       <li><a href="html/the-anatomy-of-a-large-scale-hypertextual-web-search-engine.html">The Anatomy of a Large-Scale Hypertextual Web Search Engine</a></li>
       <li><a href="html/webtables-exploring-the-power-of-tables-on-the-web.html">WebTables: Exploring the Power of Tables on the Web</a></li>
-    </ul>
+    </ol>
 
     <h1>Materialized Views, Cubes and Aggregation</h1>
-    <ul>
+    <ol start="39">
       <li><a href="html/materialized-views.html">Materialized Views</a></li>
       <li><a href="html/on-the-computation-of-multidimensional-aggregates.html">On the Computation of Multidimensional Aggregates</a></li>
       <li><a href="html/implementing-data-cubes-efficiently.html">Implementing Data Cubes Efficiently</a></li>
       <li><a href="html/informix-under-control-online-query-processing.html">Informix Under Control: Online Query Processing</a></li>
       <li><a href="html/blinkdb-queries-with-bounded-errors-and-bounded-response-times-on-very-large-data.html">BlinkDB: Queries with Bounded Errors and Bounded Response Times on Very Large Data</a></li>
-    </ul>
+    </ol>
 
     <h1>Special-case Data Models: Streams, Semistructured, Graphs</h1>
-    <ul>
+    <ol start="44">
       <li><a href="html/the-cql-continuous-query-language-semantic-foundations-and-query-execution.html">The CQL Continuous Query Language: Semantic Foundations and Query Execution</a></li>
       <li><a href="html/dataguides-enabling-query-formulation-and-optimization-in-semistructured-databases.html">Dataguides: Enabling Query Formulation and Optimization in Semistructured Databases</a></li>
       <li><a href="html/powergraph-distributed-graph-parallel-computation-on-natural-graphs.html">PowerGraph: Distributed Graph-Parallel Computation on Natural Graphs</a></li>
-    </ul>
+    </ol>
 
     <h1>Data Integration, Provenance and Transformation</h1>
-    <ul>
+    <ol start="47">
       <li><a href="html/schema-mapping-as-query-discovery.html">Schema Mapping as Query Discovery</a></li>
       <li><a href="html/provenance-in-databases-why,-how,-and-where.html">Provenance in databases: Why, How, and Where</a></li>
       <li><a href="html/wrangler-interactive-visual-specification-of-data-transformation-scripts.html">Wrangler: Interactive Visual Specification of Data Transformation Scripts</a></li>
-    </ul>
+    </ol>
 
     <h1>Systems support for ML</h1>
-    <ul>
+    <ol start="50">
       <li><a href="html/the-madlib-analytics-library-or-mad-skills-the-sql.html">The MADlib analytics library: or MAD skills, the SQL</a></li>
       <li><a href="html/hogwild-a-lock-free-approach-to-parallelizing-stochastic-gradient-descent.html">HOGWILD!: A Lock-Free Approach to Parallelizing Stochastic Gradient Descent</a></li>
       <li><a href="html/scaling-distributed-machine-learning-with-the-parameter-server.html">Scaling Distributed Machine Learning with the Parameter Server</a></li>
-    </ul>
+    </ol>
   </div>
 </body>
 </html>
