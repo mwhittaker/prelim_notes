@@ -13,8 +13,7 @@
   <div id="container">
 <h1 id="aries-a-transaction-recovery-method-supporting-fine-granularity-locking-and-partial-rollbacks-using-write-ahead-logging">ARIES: A Transaction Recovery Method Supporting Fine-Granularity Locking and Partial Rollbacks Using Write-Ahead Logging</h1>
 <ul>
-<li>WAL protocol: every change to a data object needs a record in a log; the record gets flushed before the corresponding change to the data item.</li>
-<li>WAL is faster that force approach because data changes are smaller than the pages being changed and the log is append-only.</li>
+<li>WAL protocol: every change to a data object needs a record in a log; the record gets flushed before the corresponding change to the data item. - WAL is faster that force approach because data changes are smaller than the pages being changed and the log is append-only.</li>
 <li>Periodically flushing pages to disk helps speed up recovery because the recLSNs will be bigger and we don't have to go back as far.</li>
 <li>Checkpoint location is stored in the <em>master record</em>.</li>
 <li>end records are written for committed transactions at the end of the redo phase</li>
@@ -40,9 +39,14 @@
 <li>Checkpointing during recovery can help avoid redundant work on subsequent crashes</li>
 <li>Media recovery. Media snapshot taken as of the most recent checkpoint. To recover the media, we reload it and start redo from the most recent checkpoint.</li>
 <li>Nested top action: a top action is a sequence of things we don't want to undo. We log a dummy CLR at the end of the top action to prevent undo.</li>
+<li>Q: Why does aries assume 2pl?</li>
+<li>Q: ARIES for T/O.</li>
 </ul>
   </div>
 
   <script type="text/javascript" src="../js/mathjax_config.js"></script>
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
 </body>
 </html>

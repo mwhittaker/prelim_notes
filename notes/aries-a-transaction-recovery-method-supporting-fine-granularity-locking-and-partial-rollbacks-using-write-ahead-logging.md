@@ -31,3 +31,4 @@
 - Nested top action: a top action is a sequence of things we don't want to
   undo. We log a dummy CLR at the end of the top action to prevent undo.
 - Q: Why does aries assume 2pl?
+- Q: ARIES for T/O.
