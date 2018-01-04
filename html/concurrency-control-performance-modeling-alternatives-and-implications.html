@@ -47,13 +47,24 @@
 <li><strong>Experiment 2: Limited Resources</strong>. With a limited number of resources, all three algorithms thrash, but blocking performs best. Immediate-Restart performs well when the degree of parallelism is high because the adaptive restart delay limits the effective parallelism. Adding an adaptive delay to the other two algorithms makes them perform at high degrees of parallelism as well.</li>
 <li><strong>Experiment 3: Multiple Resources</strong>. The blocking algorithm performs best up to about 25 resource units (i.e. 25 CPUs and 50 disks); after that, the optimistic algorithm performs best.</li>
 <li><strong>Experiment 4: Interactive Workloads</strong>. When transactions spend more time &quot;thinking&quot;, the system begins to behave more like it has infinite resources and the optimistic algorithm performs best.</li>
-<li>a</li>
+</ul></li>
+<li>Transaction Behavior Assumptions
+<ul>
+<li><strong>Experiment 6: Modeling Restarts</strong>. Some analyses model a transaction restart as the spawning of a completely new transaction. These fake restarts lead to higher throughput (especially for Immediate-Restart and Optimistic) because they avoid repeated transaction conflict.</li>
+<li><strong>Experiment 7: Write-Lock Acquisition</strong>. Some analyses have transactions acquire read-locks and then upgrade them to write-locks. Others have transactions immediately acquire write-locks if the object will ever be written to. Upgrading locks can lead to deadlock if two transactions concurrently write to the same object. For limited parallelism, this doesn't have much of an effect. For higher degrees of parallelism, it can reduce throughput. The effect also vary with the number of resources; see text for details.</li>
 </ul></li>
 <li>Lessons learned
 <ul>
 <li>With low contention, all three concurrency control algorithms perform similarly.</li>
 <li>Blocking is best for systems with medium to high resource utilization. Immediate-Restart or Optimistic is better for systems with low resource utilization.</li>
 <li>Limiting the amount of parallelism can prevent thrashing.</li>
+<li>Fake-restarts benefit Immediate-Restart and Optimistic, making Blocking look bad.</li>
+<li>No-lock upgrade assumption favors Immediate-Restart and then Blocking.</li>
+</ul></li>
+<li>Conclusion
+<ul>
+<li>A database model needs system model, user model, and transaction model.</li>
+<li>If there is medium to high utilization, then blocking algorithms prevent wasted work and improve throughput. If there is low utilization, then restart-oriented algorithms can tolerate the wasted utilization and are preferable.</li>
 </ul></li>
 </ul>
   </div>
