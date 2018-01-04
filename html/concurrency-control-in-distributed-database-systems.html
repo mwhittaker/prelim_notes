@@ -77,7 +77,11 @@
 <li>The 12 pure 2PL methods are {basic, primary copy, centralized} for rw concurrency control cross producted with {basic, primary copy, centralized, voting} for ww concurrency control.</li>
 <li>We have read locks, rw write locks, ww write locks, and rww write locks; rw write locks conflict with read locks; ww write locks conflict with ww write locks; rww write locks conflict with read locks, ww write locks, and rww write locks. The different combinations of 2PL methods vary in the type of locks they set.</li>
 </ul></li>
-<li><strong>Pure TO Methods</strong></li>
+<li><strong>Pure TO Methods</strong>
+<ul>
+<li>The 12 pure 2PL methods are {basic, multiversion, conservative} for rw concurrency control cross producted with {basic, Thomas write rule, multiversion, conservative} for ww concurrency control.</li>
+<li>foo</li>
+</ul></li>
 <li><strong>Mixed Methods</strong>
 <ul>
 <li>Every item has a lock time and a txn is assigned a time larger than all lock times</li>
