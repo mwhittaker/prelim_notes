@@ -6,7 +6,7 @@ PANDOC = pandoc --from markdown-tex_math_dollars-raw_tex --to html --ascii
 default: $(HTMLS) html/all.html
 
 html/%-body.html: notes/%.md
-	$(PANDOC) $< >> $@
+	$(PANDOC) $< > $@
 
 html/%.html: html/%-body.html header.html footer.html
 	cat header.html > $@
