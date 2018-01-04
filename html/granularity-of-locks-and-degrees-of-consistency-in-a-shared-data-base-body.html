@@ -1,0 +1,114 @@
+<h1 id="granularity-of-locks-and-degrees-of-consistency-in-a-shared-data-base"><a href="https://scholar.google.com/scholar?cluster=15730220590995320737">Granularity of Locks and Degrees of Consistency in a Shared Data Base</a></h1>
+<ul>
+<li>Granularity of Locks (Tree)
+<ul>
+<li>Different transactions benefit from different granularities of locks; it's a trade-off between concurrency and overhead.</li>
+<li>X, S, IX, IS, SIX</li>
+<li>S, X locks implicitly lock entire subtree. IS, IX locks say that some subtree might be locked in S or X mode.</li>
+<li><table>
+<thead>
+<tr class="header">
+<th></th>
+<th>X</th>
+<th>S</th>
+<th>IX</th>
+<th>IS</th>
+<th>SIX</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>S</td>
+<td></td>
+<td>y</td>
+<td></td>
+<td>y</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>IX</td>
+<td></td>
+<td></td>
+<td>y</td>
+<td>y</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>IS</td>
+<td></td>
+<td>y</td>
+<td>y</td>
+<td>y</td>
+<td>y</td>
+</tr>
+<tr class="odd">
+<td>SIX</td>
+<td></td>
+<td></td>
+<td></td>
+<td>y</td>
+<td></td>
+</tr>
+</tbody>
+</table></li>
+<li>Q: What's the purpose of SIX locks?</li>
+<li>Q: Why not just acquire an S and an IX lock?</li>
+<li>Q: What are the alternatives to SIX locks?</li>
+<li>Lock nodes root to leaf; release locks leaf to root.</li>
+</ul></li>
+<li>Granularity of Locks (DAG)
+<ul>
+<li>A node is implicitly locked in shared mode if <em>one</em> ancestor is locked in shared mode.</li>
+<li>A node is implicitly locked in exclusive mode if <em>all</em> ancestors are locked in exclusive mode.</li>
+<li>Q: What if both implicit shared and exclusive required a majority of ancestors? Would that scheme work?</li>
+<li>This locking scheme is equivalent to locking leaves of a tree/DAG with S and X locks (but is more efficient).</li>
+</ul></li>
+<li>Granularity of Locks (Dynamic DAGs)
+<ul>
+<li>Files, indexes, records, etc can be added, changed, and deleted.</li>
+<li>Motivating example of an index interval lock (e.g. lock all records with 10 &lt; age &lt; 18).</li>
+<li>To move an object in the DAG (e.g. move a tuple from one index interval to another) lock both the origin and destination in X mode.</li>
+</ul></li>
+<li>Granularity of Locks (Scheduling Requests)
+<ul>
+<li>Maintain a FIFO queue of lock requests.</li>
+<li>Grant as many mutually compatible requests from the top of the queue as possible.</li>
+<li>Whenever a lock is released, try again to grant as many mutually compatible requests as possible.</li>
+</ul></li>
+<li>Granularity of Locks (Conversions)
+<ul>
+<li>Sometimes we re-request locks or try to upgrade locks.</li>
+<li>Can only grant conversion when it is compatible with other outstanding locks.</li>
+<li>Can prioritize conversions over new lock requests.</li>
+<li>Can lead to deadlock.</li>
+</ul></li>
+<li>Degrees of consistency
+<ul>
+<li>Degree 0: No overwriting dirtied values; short X.</li>
+<li>Degree 1: No dirty writes; long X; &lt; acyclic.</li>
+<li>Degree 2: No dirty reads; long X; short S; &lt;&lt; acyclic.</li>
+<li>Degree 3: No non-repeatable reads; long X; long S; &lt;&lt; acyclic.</li>
+<li>Can run transactions at multiple degrees, but higher degree transactions reading lower degree outputs will lead to inconsistency.</li>
+<li>&lt;: W -&gt; W</li>
+<li>&lt;&lt;: W -&gt; W, W -&gt; R</li>
+<li>&lt;&lt;&lt;: W -&gt; W, W -&gt; R, R -&gt; W</li>
+</ul></li>
+<li>Degrees of consistency (Recoverability)
+<ul>
+<li>Recoverable: a transaction doesn't commit until all transactions from which it read commit.</li>
+<li>Avoids Cascading Aborts: no dirty reads.</li>
+<li>Strict: no dirty reads or writes.</li>
+<li>Degree 0 is not recoverable, so recovery might lose updates.</li>
+<li>Degree 1 is recoverable, but transactions could read aborted stuff.</li>
+<li>Degree 2 and 3 are recoverable to a consistent state.</li>
+</ul></li>
+<li>Degrees of consistency (Cost)</li>
+</ul>

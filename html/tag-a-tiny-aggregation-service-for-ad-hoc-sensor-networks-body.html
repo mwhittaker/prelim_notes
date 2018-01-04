@@ -1,0 +1,36 @@
+<h1 id="tag-a-tiny-aggregation-service-for-ad-hoc-sensor-networks">TAG: A tiny aggregation service for ad-hoc sensor networks</h1>
+<ul>
+<li>Motes running tiny OS form tree with increasing number broadcast</li>
+<li>Periodic aggregate SQL queries</li>
+<li>Aggregates expressed as initializer, merger, and final evaluator</li>
+<li>Characterizing aggregates
+<ul>
+<li>Duplicate sensitivity</li>
+<li>Exemplary vs summary</li>
+<li>Increasing</li>
+<li>Amount of state
+<ul>
+<li>Distributive: evaluator is identity</li>
+<li>Algebraic: intermediate state is same size as identity</li>
+<li>Holistic: proportional to input data size</li>
+<li>Unique: proprtional to number of unique inputs</li>
+<li>Context-senstive: proportional to statistical property</li>
+</ul></li>
+</ul></li>
+<li>Motes have catalog of attributes, returning NULL if queries for unknown attribute</li>
+<li>Reduce aggregates upwards</li>
+<li>Build table of groups, evicting if need be</li>
+<li>Prune increasing having queries early</li>
+<li>Send downwards with deadlines</li>
+<li>Optimizations
+<ul>
+<li>Snoop broadcast data and prune results early (e.g. hear about a bigger max)</li>
+<li>Create data at top that can be pushed down to filter results (hypothesis testing)</li>
+</ul></li>
+<li>Nodes get new parent with best link quality when parent dies</li>
+<li>2 optimizations for fault tolerance
+<ul>
+<li>Cache children values and re-send old ones</li>
+<li>Split aggregate in two and send to two parents (e.g. COUNT/2)</li>
+</ul></li>
+</ul>

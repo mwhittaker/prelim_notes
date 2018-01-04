@@ -1,0 +1,17 @@
+<h1 id="hogwild-a-lock-free-approach-to-parallelizing-stochastic-gradient-descent">HOGWILD!: A Lock-Free Approach to Parallelizing Stochastic Gradient Descent</h1>
+<ul>
+<li>Sparse cost functions: each step of gradient descent only updates a small fraction of the weight vector (e.g. sparse SVMs)</li>
+<li>Metrics of sparsity
+<ul>
+<li>maximum size of index set</li>
+<li>maximum fraction of nodes that contain a common node</li>
+<li>maximum fraction of nodes that overlap a common index set</li>
+</ul></li>
+<li>Algorithm:
+<ul>
+<li>Randomly sample a vector</li>
+<li>Compute gradient</li>
+<li>Update appropriate entries</li>
+</ul></li>
+<li>Convergence is based on the sparsity metrics</li>
+</ul>

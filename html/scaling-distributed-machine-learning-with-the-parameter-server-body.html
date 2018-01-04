@@ -1,0 +1,15 @@
+<h1 id="scaling-distributed-machine-learning-with-the-parameter-server">Scaling Distributed Machine Learning with the Parameter Server</h1>
+<ul>
+<li>A key-value store that stores (i, wi) pairs for a vector w</li>
+<li>Can use e.g. to run batch gradient descent in parallel</li>
+<li>Cluster of servers and clusters of workers</li>
+<li>Features
+<ul>
+<li>Range updates</li>
+<li>User defined functions to run on server</li>
+<li>Asynchronous task execution</li>
+<li>Serial, eventual, and bounded delay consistency</li>
+</ul></li>
+<li>Consistent hashing (with single master) and chain replication</li>
+<li>Compress messages</li>
+</ul>

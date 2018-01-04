@@ -1696,8 +1696,77 @@
 </ul>
 <h1 id="powergraph-distributed-graph-parallel-computation-on-natural-graphs">PowerGraph: Distributed Graph-Parallel Computation on Natural Graphs</h1>
 <ul>
-<li>Pregel: get messages, update state, and send messages</li>
-<li>GraphLab: update vertex and edge state directly</li>
+<li>Introduction
+<ul>
+<li>&quot;Graph-parallel abstractions rely on each vertex having a small neighborhood to maximize parallelism and effective partitioning to minimize communication&quot;.</li>
+<li>Existing graph processing frameworks do not handle power-law graphs (graphs in which a small number of vertices are incident to a large fraction of the edges) well.</li>
+</ul></li>
+<li>Graph-Parallel Abstractions
+<ul>
+<li>&quot;In contrast to more general message passing models, graphparallel abstractions constrain the interaction of vertexprogram to a graph structure enabling the optimization of data-layout and communication.&quot;</li>
+<li><strong>Pregel</strong>. In a series of super-steps, a vertex with sum its inputs using an associative commutative operator, perform a vertex function, and then send messages to all its neighbors. Pregel terminates when there are no pending messages and all vertices vote to terminate. Note that Pregel is a bulk synchronous message passing abstraction.</li>
+<li><strong>GraphLab</strong>. Data is stored on each vertex and on each edge. A vertex can read the data on all neighboring edges and vertices and then update its state. Vertices can also schedule neighbors to run. GraphLab ensures serializability. Note that GraphLab is an asynchronous shared memory abstraction.</li>
+<li>In the gather-apply-scatter abstraction (GAS), vertices sum gathered data from neighbors ($S \gets \oplus_{u} g(D_v, D_{v,u}, D_u)$), apply the sum to make a new state ($D_v' \gets a(D_v, S)$), and scatter the state to all neighbors ($D_{v,u}' \gets s(D_v', D_{v,u}, D_u)$).</li>
+</ul></li>
+<li>Bad because time spent is proportional to degree of vertex</li>
+<li>Gather-Apply-Scatter model for PowerGraph
+<ul>
+<li>gather(Du, Duv, Dv) -&gt; accum</li>
+<li>sum(accum, accum) -&gt; accum</li>
+<li>apply(Du, accum) -&gt; Dunew</li>
+<li>scatter(Dunew, Duv, Dv) -&gt; Duvnew, accum</li>
+</ul></li>
+<li>When one vertex changes, re-running gather can be a pain, so we can send delta accumulator</li>
+<li>Explicit activation, bulk synchronous, and asynchronous execution</li>
+<li>Subsumes Pregel and GraphLab</li>
+<li>Pregel and GraphLab do edge cuts, GraphLab does vertex cut</li>
+<li>Gather in parallel, send to master vertex, apply and distribute, scatter in parallel</li>
+<li>Greedy algorithm for nice vertex cut</li>
+</ul>
+<h1 id="powergraph-distributed-graph-parallel-computation-on-natural-graphs">PowerGraph: Distributed Graph-Parallel Computation on Natural Graphs</h1>
+<ul>
+<li>Introduction
+<ul>
+<li>&quot;Graph-parallel abstractions rely on each vertex having a small neighborhood to maximize parallelism and effective partitioning to minimize communication&quot;.</li>
+<li>Existing graph processing frameworks do not handle power-law graphs (graphs in which a small number of vertices are incident to a large fraction of the edges) well.</li>
+</ul></li>
+<li>Graph-Parallel Abstractions
+<ul>
+<li>&quot;In contrast to more general message passing models, graphparallel abstractions constrain the interaction of vertexprogram to a graph structure enabling the optimization of data-layout and communication.&quot;</li>
+<li><strong>Pregel</strong>. In a series of super-steps, a vertex with sum its inputs using an associative commutative operator, perform a vertex function, and then send messages to all its neighbors. Pregel terminates when there are no pending messages and all vertices vote to terminate. Note that Pregel is a bulk synchronous message passing abstraction.</li>
+<li><strong>GraphLab</strong>. Data is stored on each vertex and on each edge. A vertex can read the data on all neighboring edges and vertices and then update its state. Vertices can also schedule neighbors to run. GraphLab ensures serializability. Note that GraphLab is an asynchronous shared memory abstraction.</li>
+<li>In the gather-apply-scatter abstraction (GAS), vertices sum gathered data from neighbors ($S \gets \oplus_{u} g(D_v, D_{v,u}, D_u)$), apply the sum to make a new state ($D_v' \gets a(D_v, S)$), and scatter the state to all neighbors ($D_{v,u}' \gets s(D_v', D_{v,u}, D_u)$).</li>
+</ul></li>
+<li>Bad because time spent is proportional to degree of vertex</li>
+<li>Gather-Apply-Scatter model for PowerGraph
+<ul>
+<li>gather(Du, Duv, Dv) -&gt; accum</li>
+<li>sum(accum, accum) -&gt; accum</li>
+<li>apply(Du, accum) -&gt; Dunew</li>
+<li>scatter(Dunew, Duv, Dv) -&gt; Duvnew, accum</li>
+</ul></li>
+<li>When one vertex changes, re-running gather can be a pain, so we can send delta accumulator</li>
+<li>Explicit activation, bulk synchronous, and asynchronous execution</li>
+<li>Subsumes Pregel and GraphLab</li>
+<li>Pregel and GraphLab do edge cuts, GraphLab does vertex cut</li>
+<li>Gather in parallel, send to master vertex, apply and distribute, scatter in parallel</li>
+<li>Greedy algorithm for nice vertex cut</li>
+</ul>
+<p>fo</p>
+<h1 id="powergraph-distributed-graph-parallel-computation-on-natural-graphs">PowerGraph: Distributed Graph-Parallel Computation on Natural Graphs</h1>
+<ul>
+<li>Introduction
+<ul>
+<li>&quot;Graph-parallel abstractions rely on each vertex having a small neighborhood to maximize parallelism and effective partitioning to minimize communication&quot;.</li>
+<li>Existing graph processing frameworks do not handle power-law graphs (graphs in which a small number of vertices are incident to a large fraction of the edges) well.</li>
+</ul></li>
+<li>Graph-Parallel Abstractions
+<ul>
+<li>&quot;In contrast to more general message passing models, graphparallel abstractions constrain the interaction of vertexprogram to a graph structure enabling the optimization of data-layout and communication.&quot;</li>
+<li><strong>Pregel</strong>. In a series of super-steps, a vertex with sum its inputs using an associative commutative operator, perform a vertex function, and then send messages to all its neighbors. Pregel terminates when there are no pending messages and all vertices vote to terminate. Note that Pregel is a bulk synchronous message passing abstraction.</li>
+<li><strong>GraphLab</strong>. Data is stored on each vertex and on each edge. A vertex can read the data on all neighboring edges and vertices and then update its state. Vertices can also schedule neighbors to run. GraphLab ensures serializability. Note that GraphLab is an asynchronous shared memory abstraction.</li>
+<li>In the gather-apply-scatter abstraction (GAS), vertices sum gathered data from neighbors ($S \gets \oplus_{u} g(D_v, D_{v,u}, D_u)$), apply the sum to make a new state ($D_v' \gets a(D_v, S)$), and scatter the state to all neighbors ($D_{v,u}' \gets s(D_v', D_{v,u}, D_u)$).</li>
+</ul></li>
 <li>Bad because time spent is proportional to degree of vertex</li>
 <li>Gather-Apply-Scatter model for PowerGraph
 <ul>

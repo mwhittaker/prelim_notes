@@ -1,0 +1,20 @@
+<h1 id="schema-mapping-as-query-discovery">Schema Mapping as Query Discovery</h1>
+<ul>
+<li>Schema assertions vs value correspondences (maps source attrs to output attrs</li>
+<li>a filter)</li>
+<li>Advantages of value correspondences (easier to write; more like programming by example)</li>
+<li>Algorithm has to figure out how to join stuff to implement the value correspondences</li>
+<li>Heuristics: prefer N:1 joins and then outer joins; union stuff together</li>
+<li>Algorithm:
+<ul>
+<li>Generate candidate sets</li>
+<li>Follow foreign keys and prompt user for joins, pruning bad ones</li>
+<li>Construct value correspondence cover with fewest candidate sets</li>
+<li>Generate a SQL query for each candidate set</li>
+</ul></li>
+<li>Incremental algorithm
+<ul>
+<li>Given a new value correspondence, create a new cover for each insertion into a candidate set</li>
+<li>Ask user to rank</li>
+</ul></li>
+</ul>

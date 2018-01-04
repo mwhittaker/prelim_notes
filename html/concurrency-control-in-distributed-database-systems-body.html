@@ -1,0 +1,91 @@
+<h1 id="concurrency-control-in-distributed-database-systems"><a href="https://scholar.google.com/scholar?cluster=5576139455848332932">Concurrency Control in Distributed Database Systems</a></h1>
+<ul>
+<li>Database model
+<ul>
+<li>Each site runs a transaction manager (TM) and database manager (DM).</li>
+<li>A transaction talks to a TM which coordinates with to DMs.</li>
+<li>Logical value $X$ stored in replicas $x_1, \ldots, x_n$.</li>
+<li>Transactions read and write values from a private workspace. Two-phase commit is used to transfer private workspaces into the database. pre-write used for first round of 2PC; dm-write used for second round.</li>
+</ul></li>
+<li>Decomposition of the concurrency control problem
+<ul>
+<li>Schedules are represented as a log of reads and writes for each DM.</li>
+<li>Conflict serializability is defined for this type of schedule.</li>
+<li>Concurrency control decomposed in terms of rw/wr conflicts, ww conflicts, and the glue that binds them together.</li>
+</ul></li>
+<li>2PL synchronization techniques
+<ul>
+<li><strong>Basic 2PL</strong>: read lock on one replica, write locks on all replicas.</li>
+<li><strong>Primary Copy 2PL</strong>: read lock and write lock on primary copy.</li>
+<li><strong>Voting 2PL (ww only)</strong>: wait for a majority of write locks.</li>
+<li><strong>Centralized 2PL</strong>: all locks sent to single DM.</li>
+<li>Deadlock detection and prevention:
+<ul>
+<li>Wound-wait and wait-die (with care not to abort a transaction in the second phase of 2PL).</li>
+<li>Conservative 2PL (aka predeclaration).</li>
+<li>Centralized and hierarchical deadlock detection.</li>
+<li>Phantom deadlocks caused by aborts for reasons other than deadlock.</li>
+</ul></li>
+</ul></li>
+<li>Timestamp ordering synchronization techniques (with weird buffering)
+<ul>
+<li>To ensure recoverability and to cooperate with 2PC, T/O requires buffering which can be similar, but not equivalent to, acquiring locks.</li>
+<li><strong>Basic T/O implementation</strong>.
+<ul>
+<li>Every transaction is given a timestamp, and operations are executed in timestamp order. A transaction is aborted (and restarted with a larger timestamp) if it detects an error in the timestamp ordering.</li>
+<li>With private workspaces and 2PC, we cannot allow a dm-read or dm-write until the prewritten writes with lower timestamps are done. Otherwise, for example, a read could read the wrong value.</li>
+<li>Buffer reads, prewrites, and writes. Reads cannot be issued until all previous pending prewrites are done. Writes cannot be issued until all previous pending reads are done.</li>
+</ul></li>
+<li><strong>Thomas Write Rule</strong>: If a write has an older timestamp than the thing it's writing, ignore the write.</li>
+<li><strong>Multiversion T/O</strong>
+<ul>
+<li>Maintain list of read timestamps and list of (write timestamp, write value).</li>
+<li>Reads are never rejected and read the latest version.</li>
+<li>Writes are accepted only if no read occurred after it and before the next write.</li>
+<li>As with basic T/O, we have to buffer reads, prewrites, and writes to ensure that a reads don't read the wrong value.</li>
+</ul></li>
+<li><strong>Conservative T/O</strong>
+<ul>
+<li>All TMs send dm-read and dm-write requests to DMs in increasing timestamp order.</li>
+<li>A dm-read is not executed until the min dm-write request from all TMs is bigger; a dm-write is not executed until the min dm-read request from all TMs is bigger.</li>
+<li>This is overly conservative; we serialize all operations, not just the conflicting ones.</li>
+<li>We give each TM a transaction class: a read and write set. A transaction can execute at a TM only if its (predeclared) read and write sets are subsets.</li>
+<li>A DM only waits for timestamps from transaction classes with intersecting write sets (for ww conflicts) or intersecting read/write sets for (rw conflicts).</li>
+</ul></li>
+<li>Garbage collection
+<ul>
+<li>Instead of storing the read and write timestamp for every object, store it for a fixed number of objects. For all other objects, conservatively assume the timestamp is the minimum of the stored objects.</li>
+</ul></li>
+</ul></li>
+<li>CC Methods
+<ul>
+<li><strong>Pure 2PL Methods</strong>
+<ul>
+<li>The 12 pure 2PL methods are {basic, primary copy, centralized} for rw concurrency control cross producted with {basic, primary copy, centralized, voting} for ww concurrency control.</li>
+<li>We have read locks, rw write locks, ww write locks, and rww write locks; rw write locks conflict with read locks; ww write locks conflict with ww write locks; rww write locks conflict with read locks, ww write locks, and rww write locks. The different combinations of 2PL methods vary in the type of locks they set.</li>
+</ul></li>
+<li><strong>Pure TO Methods</strong>
+<ul>
+<li>The 12 pure 2PL methods are {basic, multiversion, conservative} for rw concurrency control cross producted with {basic, Thomas write rule, multiversion, conservative} for ww concurrency control.</li>
+<li>foo</li>
+</ul></li>
+<li><strong>Mixed Methods</strong>
+<ul>
+<li>Every item has a lock time and a txn is assigned a time larger than all lock times</li>
+<li>Basic 2PL rw + TWW ww:
+<ul>
+<li>Reads and writes aquire read locks and ww locks</li>
+<li>Data items tagged with write timestamps</li>
+<li>After all prewrites, get a timestmp and check all writes</li>
+<li>Writes don't block writes</li>
+</ul></li>
+<li>TO rw + 2PL ww
+<ul>
+<li>Conservatively issue all prewrites and get a timestamp</li>
+<li>Reads block if a buffered prewrite exists with a lock time less than the txn's timestamp</li>
+<li>Writes never block</li>
+<li>Read-only queries can run at any timestamp</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>

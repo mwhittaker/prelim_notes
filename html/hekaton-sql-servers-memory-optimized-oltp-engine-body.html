@@ -1,0 +1,43 @@
+<h1 id="hekaton-sql-servers-memory-optimized-oltp-engine">Hekaton: SQL Server's Memory-Optimized OLTP Engine</h1>
+<ul>
+<li>Hekaton as an embedded OLTP engine inside of Microsoft SQL Server</li>
+<li>Storage and indexing
+<ul>
+<li>Tuples stored row-by-row with logical begin and end timestamps, index links, and data</li>
+<li>Latch-free hash indexes and Bw-tree indexes</li>
+<li>Reads read all versions but only return relevant version</li>
+<li>Deletes place txn id in end timestamp</li>
+<li>Inserts place txn id in begin timestamp</li>
+<li>On commit, txn id is replaced by timestamp</li>
+</ul></li>
+<li>Query compilation
+<ul>
+<li>Stored procedure optimized into mixed abstract syntax tree (MAT) then pure imperative tree (PIT) and then into C code</li>
+<li>Compiled C code doesn't use function calls; uses gotos and labels instead</li>
+<li>Compiled queries have some restrictions</li>
+<li>Also supports interpreted queries to overcome these restrictions</li>
+</ul></li>
+<li>Transaction management
+<ul>
+<li>Similar to MVCC snapshot isolation with additional OCC-like validation checks</li>
+<li>Every txn given start timestamp at start and commit timestamp at end.</li>
+<li>All reads issued as of start timestamp</li>
+<li>Check read stability and phantom avoidance using read set and scan set</li>
+<li>Commit dependencies and cascaded aborts</li>
+<li>Write set to clean up affected records</li>
+</ul></li>
+<li>Recovery
+<ul>
+<li>All the insertions and deletions of a transaction are written at once to stable storage in a log</li>
+<li>Periodically, the insertions and deletions are written to pairs of append-only data streams and delta streams</li>
+<li>On recovery, the data and delta streams are replayed in parallel and then the log is played back</li>
+<li>Index operations not logged; all indexes rebuilt on recovery</li>
+<li>Periodically, data and delta streams are merged</li>
+</ul></li>
+<li>Garbage collection
+<ul>
+<li>Tuple is garbage if it was deleted at a time before all pending timestamps</li>
+<li>Online: whenever a txn scans the entries of an index, it can delete old values (keeps hot indexes clean)</li>
+<li>Offline: nodes alternate between gc and processing</li>
+</ul></li>
+</ul>

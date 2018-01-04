@@ -1,0 +1,25 @@
+<h1 id="webtables-exploring-the-power-of-tables-on-the-web">WebTables: Exploring the Power of Tables on the Web</h1>
+<ul>
+<li>Scrape tables, filter bad one, create search engine + db admin tools</li>
+<li>Scraping tables
+<ul>
+<li>Scrape 14.1 billion tables from Google</li>
+<li>Filter bad ones using hand-written classifiers and classifiers trained on hand-labelled data</li>
+<li>Prefer recall over precision (later pipeline will filter)</li>
+<li>Another classifier to get schema</li>
+<li>Build ACSDb schema -&gt; frequency</li>
+</ul></li>
+<li>Relation search
+<ul>
+<li>Just search google</li>
+<li>Rank using classifier trained on features like hits in header, hits in first column, etc</li>
+<li>Rank using classifier and a measure of the schema coherency using ACSDb</li>
+<li>inverted index from word to table(x, y)</li>
+</ul></li>
+<li>ACSDb
+<ul>
+<li>Schema autocomplete: most likely attribute conditioned on existing attributes</li>
+<li>Attribute synonym finding: likelihood of two synonyms appearing is low and conditioning on either word has similar effect</li>
+<li>Join graph traversal: clusters neighbor of a node based on how similar they are</li>
+</ul></li>
+</ul>

@@ -1,0 +1,14 @@
+<h1 id="spanner-googles-globally-distributed-database">Spanner: Google&#8217;s Globally-Distributed Database</h1>
+<ul>
+<li>Universe, zones, span server, zone master, location proxy, universe master, placement driver</li>
+<li>Span servers store tables (key * timestamp) -&gt; value</li>
+<li>Tablets stored on paxos groups</li>
+<li>Leader of Paxos group participates in 2PC</li>
+<li>Directory is range of tablet</li>
+<li>Pseudo-relational model in which all tables have primary keys and the key of children is prefixed by key of parent</li>
+<li>True-time produces time (a, b) where actual time is somewhere in between</li>
+<li>Linearizable read-write txns and snapshot read txns</li>
+<li>We want to assign a timestamp between the actual start time and the actual end time, but we don't know these times. So we set the timestamp to be after the latest time at the start and then wait until we know for sure that time passed at the end. Writes are not made available until the end</li>
+<li>Wound-wait deadlock avoidance</li>
+<li>Schema change</li>
+</ul>
