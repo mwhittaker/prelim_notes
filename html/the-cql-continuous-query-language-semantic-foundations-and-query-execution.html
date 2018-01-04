@@ -62,10 +62,9 @@
 <li>A query plan is a graph in which vertices are <strong>operators</strong> and edges are <strong>queues</strong> (in memory). Operators read streams and relations (in their unified format) from their input queues and output a stream or relation on their output queue.</li>
 <li>Every operator has a corresponding <strong>synopsis</strong> (in memory) in which it can maintain its state. For example, a sliding window join may create a couple of hash tables.</li>
 <li>Tuple are not copied when possible. Instead, they are stored in synopses, and tuple references are passed around.</li>
-<li><p>Multiple</p></li>
-<li>Queries mapped to graph in which vertexes are operators, edges are queues, state stored in synopses</li>
-<li>Relations and streams stored as streams</li>
-<li>Relational operators implemented like materialized views</li>
+<li>Multiple queries can (and should) be combined into a single query plan.</li>
+<li>A global scheduler decides how to evaluate the query plan graphs.</li>
+<li>STREAM (a DSMS that implements CQL) has physical operators for all of the CQL operators and a couple of lower-level system operators.</li>
 </ul></li>
 <li>Questions
 <ul>
@@ -78,6 +77,8 @@
 <li>Q: How can we implement Istream and Dstream as an Rstream?</li>
 <li>A: ???</li>
 <li>Q: Why is a SQL query plan a tree but a CQL query plan a graph?</li>
+<li>A: ???</li>
+<li>Q: How do you implement the stream-based relation-to-relation operators?</li>
 <li>A: ???</li>
 </ul></li>
 </ul>
