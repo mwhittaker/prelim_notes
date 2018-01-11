@@ -13,17 +13,138 @@
   <div id="container">
 <h1 id="spanner-googles-globally-distributed-database">Spanner: Google&#8217;s Globally-Distributed Database</h1>
 <ul>
-<li>Universe, zones, span server, zone master, location proxy, universe master, placement driver</li>
-<li>Span servers store tables (key * timestamp) -&gt; value</li>
-<li>Tablets stored on paxos groups</li>
-<li>Leader of Paxos group participates in 2PC</li>
-<li>Directory is range of tablet</li>
-<li>Pseudo-relational model in which all tables have primary keys and the key of children is prefixed by key of parent</li>
-<li>True-time produces time (a, b) where actual time is somewhere in between</li>
-<li>Linearizable read-write txns and snapshot read txns</li>
-<li>We want to assign a timestamp between the actual start time and the actual end time, but we don't know these times. So we set the timestamp to be after the latest time at the start and then wait until we know for sure that time passed at the end. Writes are not made available until the end</li>
-<li>Wound-wait deadlock avoidance</li>
-<li>Schema change</li>
+<li>Architecture
+<ul>
+<li>Spanner deployments are called <strong>universes</strong>.</li>
+<li>The unit of physical isolation and administration is the <strong>zone</strong>. There may be multiple zones per datacenter.</li>
+<li>Each zone has a <strong>zonemaster</strong>, some <strong>location proxies</strong>, and a lot of <strong>spanservers</strong>. The zonemaster assigns data to spanservers, and the spanservers serve data to clients.</li>
+<li>There is also a single <strong>universemaster</strong> (for administration) and <strong>placement driver</strong> (for moving data around).</li>
+</ul></li>
+<li>Example
+<ul>
+<li><p>Imagine we have the following relation, divided into eight directories.</p>
+<pre><code>  +----+
+  | D1 |
+  | D2 |
+  | D3 |
+  | D4 |
+  | D5 |
+  | D6 |
+  | D7 |
+  | D8 |
+  +----+</code></pre></li>
+<li><p>We bundle the directories into tablets:</p>
+<pre><code>  T1: D1, D6
+  T2: D3, D5
+  T3: D2, D8
+  T4: D4, D7</code></pre></li>
+<li><p>Each tablet is then replicated, say three ways.</p>
+<pre><code>  R1: [D1, D6]  R4: [D3, D5]  R7: [D2, D8]  R10: [D4, D7]
+  R2: [D1, D6]  R5: [D3, D5]  R8: [D2, D8]  R11: [D4, D7]
+  R3: [D1, D6]  R6: [D3, D5]  R9: [D2, D8]  R12: [D4, D7]</code></pre></li>
+<li><p>Imagine we have five zones, with two servers per zone. We can split up the tablet replicas like this (stars signify the master):</p>
+<pre><code>  Zone 1:  M1: [R1],       M2: [R10*]
+  Zone 2:  M3: [R7],       M4: [R4*]
+  Zone 3:  M5: [R8],       M6: [R5, R11]
+  Zone 4:  M7: [R9*, R12], M8: [R2*]
+  Zone 5:  M9: [R6],       M10: [R3]</code></pre></li>
+</ul></li>
+<li>Spanserver Architecture
+<ul>
+<li>Each spanserver maintains 100-100 <strong>tablets</strong>. Each tablet is a <code>(key: string, value: timestamp) -&gt; string</code> mapping stored as roughly an LSM-tree on Colossus. Note that a Spanner tablet is similar to but not quite the same as a Bigtable tablet.</li>
+<li>Each tablet is replicated across a set of spanservers, and these spanservers form a Paxos group. One Paxos group is run per tablet, and the metadata and log are both stored in the tablet itself. The Paxos instance also uses 10-second leader leases. Writes to the tablet must go through Paxos. Reads can be read directly from a tablet so long as it is sufficiently up to date.</li>
+<li>The leader of a Paxos group maintains a <strong>lock table</strong> for concurrency control. This lock table is not replicated via Paxos.</li>
+<li><p>The leader of a Paxos group also has a <strong>transaction manager</strong> for two-phase commit. The leader is called a <strong>participant leader</strong>, the other members are <strong>participant slaves</strong>. One Paxos group is designated as the coordinator. The leader of this group is called the <strong>coordinator leader</strong>; the rest are <strong>coordinator slaves</strong>.</p>
+<pre><code>Paxos Group 1 (participant)
++------------------------------------------------------------------+
+| [participant leader]&lt;-&gt;[participant slave]&lt;-&gt;[participant slave] |
++------------------------------------------------------------------+
+   ^
+   |
+   v
+Paxos Group 2 (participant)
++------------------------------------------------------------------+
+| [participant leader]&lt;-&gt;[participant slave]&lt;-&gt;[participant slave] |
++------------------------------------------------------------------+
+   ^
+   |
+   v
+Paxos Group 3 (coordinator)
++------------------------------------------------------------------+
+| [coorindator leader]&lt;-&gt;[coorindator slave]&lt;-&gt;[coorindator slave] |
++------------------------------------------------------------------+</code></pre></li>
+</ul></li>
+<li>Directories
+<ul>
+<li>A <strong>directory</strong> is a contiguous region of the key-space with a common prefix.</li>
+<li>Directories are the unit of data movement and the smallest unit for which an application can specify replication configuration (e.g.&#160;replicate this directory 5 times in Europe)</li>
+<li>A tablet can contain many directories.</li>
+</ul></li>
+<li>Data Model
+<ul>
+<li>Spanner uses a hierarchical semi-relational data model; really it&#8217;s the relational model with a couple of small caveats.</li>
+<li>All relations must have a primary key.</li>
+<li>Relations can be nested within parents with child primary keys being prefixed by their parent primary keys.</li>
+<li>These hierarchical relations are stored with rows interleaved and within the same directory.</li>
+</ul></li>
+<li>TrueTime
+<ul>
+<li>The TrueTime API has a call <code>TT.now()</code> which returns an interval of time that is guaranteed to contain the true time.</li>
+</ul></li>
+<li>Concurrency Control
+<ul>
+<li>Spanner offers four types of transactions linearizable read-write transactions, snapshot (read-only) transactions, snapshot reads at a user specified timestamp, and snapshot reads with a user specified staleness bound.</li>
+</ul></li>
+<li>Read-Write Transactions
+<ul>
+<li>Notes and Invariants
+<ul>
+<li>Unlike with a traditional RDBMS, clients will perform all reads and buffer all writes, and then commit all the writes at once. This means that a transaction won&#8217;t read its own write by default.</li>
+<li><strong>Invariant</strong>: Paxos leader leases are disjoint.</li>
+<li><strong>Invariant:</strong> Writes within a Paxos group are assigned monotonically increasing timestamps (even across leaders).</li>
+<li><strong>Invariant:</strong> Every write in a transaction is tagged with the same timestamp (the timestamp of the commit).</li>
+<li><strong>Invariant:</strong> Other transactions cannot read a write at a timestamp until that time has passed.</li>
+<li><strong>Invariant:</strong> If a transaction commits at time $s_i$, then Spanner ensures clients cannot see the effects of the transaction until after $s_i$ has passed.</li>
+</ul></li>
+<li>Procedure
+<ul>
+<li>A client first sends reads to the appropriate Paxos leaders. The leaders maintain a lock table and acquire read locks. Leaders use wound-wait to avoid deadlock (without need for coordination).</li>
+<li>After a client has performed all of its reads and buffered all of its writes, it begins two-phase commit. The client chooses a coordinator group and sends a prepare message and the identity of the coordinator group to all groups.</li>
+<li>Groups aquire write locks and stage the writes. They then log a prepare message to the log with a timestamp higher than previous log entries. They relay their vote to the coordinator leader along with the prepare timestamp they choose.</li>
+<li>The coordinator leader either aborts or chooses a commit timestamp greater than the prepare of all other groups and greater than the <code>latest</code> time produced by a <code>TT.now()</code> call made when the prepare request was received.</li>
+<li>After the commit timestamp has passed, the coordinator leader replies to the client and also sends the commit timestamp to all other Paxos groups. At this point, the Paxos group apply their staged writes and release their locks.</li>
+</ul></li>
+</ul></li>
+<li>Serving Reads at a Timestamp
+<ul>
+<li>Say we want to perform a read at timestamp $t$. Servers maintain a low watermark $t_{safe}$ with the guarantee that no more writes will happen before $t_{safe}$. A client can perform a read if $t \leq t_{safe}$.</li>
+<li>So how do we compute $t_{safe}$? It is $\min(t_{safe}^{Paxos}, t_{safe}^{TM})$. Here, $t_{safe}^{Paxos}$ is the highest <em>applied</em> Paxos write. $t_{safe}^{TM}$ is ignored if there are no pending transactions. If there are pending transactions, $t_{safe}^{TM}$ is the smallest pending timestamp. This ensures that transactions do not read pending writes.</li>
+<li>One confusing thing is why we need $t_{safe}^{TM}$. A spanserver does not associate a timestamp with a write until it has already committed, so pending writes should not even show up.</li>
+</ul></li>
+<li>Snapshot Read Transactions
+<ul>
+<li>Choose a time greater than <code>latest</code> from <code>TT.now()</code> and read at that timestamp.</li>
+</ul></li>
+<li>Refinements
+<ul>
+<li>The timestamps chosen for a snapshot read can be pushed backwards to the time of the most recent committed transaction. Alternatively, the transaction can choose a better one by looking at which writes conflict.</li>
+<li>$t_{safe}^{Paxos}$ can be advanced in clever ways.</li>
+</ul></li>
+<li>Paxos Leases
+<ul>
+<li>TODO</li>
+</ul></li>
+<li>Schema change transactions
+<ul>
+<li>TODO</li>
+</ul></li>
+<li>Questions
+<ul>
+<li>Q: If spanservers store their tablets in Colossus (which is replicated), why do they need to run Paxos at all?</li>
+<li>A: ??? Maybe Colossus doesn&#8217;t guarantee strong consistency in the face of concurrent writes.</li>
+<li>Q: The paper says transaction reads do <em>NOT</em> read their own writes. How can this be true while still ensuring serializability?</li>
+<li>A: ??? I guess you have to buffer your own writes?</li>
+</ul></li>
 </ul>
   </div>
 
