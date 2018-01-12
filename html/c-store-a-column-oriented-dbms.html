@@ -11,29 +11,40 @@
     <a href="../">Prelim Notes</a>
   </div>
   <div id="container">
-<h1 id="c-store-a-column-oriented-dbms">C-Store: a Column-Oriented DBMS</h1>
+<h1 id="c-store-a-column-oriented-dbms"><a href="https://scholar.google.com/scholar?cluster=12924804892742402591">C-Store: A Column-Oriented DBMS</a></h1>
 <ul>
+<li>Introduction
+<ul>
+<li>Row-stores are write optimized; a write takes a single disk seek.</li>
+<li>Column-stores are read optimized; they exploit tricks like only reading relevant columns, compressing columns (trading CPU for memory and disk bandwidth), redundant storage with different sort orders, dense-packing indexes, vector processing, etc.</li>
+</ul></li>
 <li>Data model
 <ul>
-<li>Data stored as sorted projections range partitioned on sort key (e.g. R(a, b))</li>
-<li>Projections stored column-by-column</li>
-<li>Each entry in a projection is assigned a projection-unique storage key (stored explicitly in WS but not RS)</li>
-<li>Join index matches up one projection to the segment and storage key of the matching tuples in another projection</li>
+<li>Relations are stored as a collections of <strong>projections</strong>. A projection anchored on a relation $R$ is a subset of the columns in some sorted order (e.g. $R(a, b)$ sorted on $b$).</li>
+<li>Projections are stored column-by-column.</li>
+<li>Projections are horizontally partitioned across a cluster on their sort key.</li>
+<li>Each entry in a segment is assigned a segment-unique storage key (stored explicitly in WS but not RS).</li>
+<li>A join index matches up one projection $P$ segment-by-segment to another projection $Q$. Logically each segment $P_i$ in $P$ with $n$ rows has an $n$-row join index table with rows of the form (segment id, storage key). The $i$th entry in the join index table locates the corresponding row in $Q$.</li>
+<li>To reconstruct an entire table in some sort order from a set of projections, we need join indexes to map a covering set of projections to that sort order.</li>
+<li>Join indexes are very expensive to maintain. Modifying a projection requires modifying all the join indexes pointing into or out of it. This is why they are good for read-only workloads.</li>
+<li>Horizontally partitioned projections with redundancy can be used to achieve fault tolerance.</li>
 </ul></li>
 <li>RS
 <ul>
-<li>Columns in RS compressed based on sorted and number of values</li>
-<li>Self-ordered, few values: dense B+ tree mapping v to (v, offset, count)</li>
-<li>Foreign-ordered, few values: dense B+ tree mapping b to bitmap</li>
-<li>Self-ordered, many values: delta encoded</li>
-<li>Foreign-ordered, many values: uncompressed</li>
+<li>The storage keys of tuples in RS are implicit (i.e.&#160;the $i$th tuple has storage key $i$).</li>
+<li>Columns in RS are compressed based on their sort order and based on their number of distinct values.</li>
+<li><strong>Self-ordered, few values</strong>: We store a dense B+ tree mapping <code>v</code> to <code>(v, offset, count)</code>.</li>
+<li><strong>Foreign-ordered, few values</strong>: We store a bitmap per unique value <code>v</code>. We also store a B+ tree mapping index to value.</li>
+<li><strong>Self-ordered, many values</strong>: We store a block-based delta encoding with a B+ tree mapping index to block.</li>
+<li><strong>Foreign-ordered, many values</strong>: We store the projection uncompressed, but still with a B+ tree mapping index to value.</li>
 </ul></li>
 <li>WS
 <ul>
-<li>Same storage format as RS</li>
-<li>Projections range partitioned same way</li>
-<li>Larger storage key assigned to each tuple</li>
-<li>B+ tree sort key to storage key and storage key to sort key</li>
+<li>WS uses the same storage format as RS, except that projections are not compressed and that storage keys are stored explicitly.</li>
+<li>WS projections are horizontally range partitioned in the same way as the RS, so that RS segments can be colocated with WS segments.</li>
+<li>When a tuple is inserted, it is assigned a storage key that is larger than all current WS storage keys.</li>
+<li>We use two B+ trees. (1) We store columns as (value, storage key) with a B+ tree on the storage key. (2) We store a B+ tree mapping sort key to storage key.</li>
+<li>Join indexes are also partitioned to be colocated with their WS and RS counterparts.</li>
 </ul></li>
 <li>Updates and transactions
 <ul>
@@ -55,8 +66,13 @@
 </ul></li>
 <li>Query optimizer
 <ul>
-<li>Algorithms for e.g. decompressing, bitmap logic, applying bitmaps, concatenating projections etc</li>
+<li>Algorithms for e.g.&#160;decompressing, bitmap logic, applying bitmaps, concatenating projections etc</li>
 <li>Optimizer has to take into account the cost of decompressing and which projections to use</li>
+</ul></li>
+<li>Questions
+<ul>
+<li>Q: The paper claims that row-storage &amp; B+ trees are write-optimized while other data structures like bit map indexes are read optimized. Why?</li>
+<li>A: A row store will only store one copy of a relation and use a bunch of B+ tree indexes to access it. Because we only store a relation once, it can only be clustered on one set of attributes. If we store multiple projects with different sort orders, we can traverse relations in different orders efficiently. Because the workload is read-only, maintaing these redundant copies is not expensive.</li>
 </ul></li>
 </ul>
   </div>
