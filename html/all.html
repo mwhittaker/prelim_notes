@@ -1067,20 +1067,61 @@
 </ul>
 <h1 id="calvin-fast-distributed-transactions-for-partitioned-database-systems">Calvin: Fast Distributed Transactions for Partitioned Database Systems</h1>
 <ul>
-<li>Avoiding two-phase commit
+<li>Overview
 <ul>
-<li>2PC aborts because of crashes and because of logical aborts</li>
-<li>If we replicate each node, then we can ensure a node never crashes</li>
-<li>To replicate txns, we need determinism</li>
-<li>Logical aborts only require one round of communication, not two</li>
+<li>The time during which a transaction holds its locks is known as its <strong>contention footprint</strong>. In a traditional distributed transactional database, a transaction has to run some distributed commit protocol like 2PC which greatly increases the contention footprint.</li>
+<li>Calvin is a database which will reduce the contention footprint of transactions.</li>
 </ul></li>
-<li>Architecture: sequencer, schedulers, and storage</li>
-<li>Sequencing epochs and Paxos replication</li>
-<li>Two-phase locking respecting the log</li>
-<li>Execution in which local reads are broadcast</li>
-<li>Optimistic lock location prediction (OLLP) for determining read sets</li>
-<li>Prefetch pages for txns that haven't even run yet</li>
-<li>Zig-zag checkpoint in which all writes after a point in the global log are written elsewhere</li>
+<li>Deterministic Databases
+<ul>
+<li>If we want to replicate a database, &#8220;synchronously replicating every database state change would have far too high of an overhead to be feasible.&#8221;</li>
+<li>To avoid this overhead, a <strong>deterministic database</strong> instead replicates transaction requests annotated with a pre-agreed upon commit order and ensures that transactions commit in this order.</li>
+<li>Deterministic databases avoid the need for aborting on <strong>non-deterministic failure</strong>, and <strong>deterministic failures</strong> can be handled in one phase instead of two. Every replica simply waits for a commit or abort message from every other node.</li>
+</ul></li>
+<li>System Architecture
+<ul>
+<li>Calvin is divided into three layers:
+<ul>
+<li><strong>Sequencing layer</strong>. This layer is responsible for globally ordering all transactions submitted to Calvin.</li>
+<li><strong>Scheduling layer</strong>. This layer is responsible for executing transactions in the pre-agreed upon global order.</li>
+<li><strong>Storage layer</strong>. This layer is responsible for storing data. Because the storage layer is a separate module, Calvin is not able to do things like run the physical parts of ARIES for recovery. Instead, recovery has to be purely logical.</li>
+</ul></li>
+<li>Sequencing layer.
+<ul>
+<li>Time is divided into 10 ms epochs. A sequencing node sequences and batches transaction requests into these epochs and then sends them to every scheduler in its replica.</li>
+<li>The scheduler round robin shuffles the sequences from every sequencing node in its replica.</li>
+<li>Across replicas, sequencing nodes replicate sequences either asynchronously or synchronously.</li>
+<li>The asynchronous replication is like a primary-backup schema. Handling recovery here is complicated and not really described fully in the paper.</li>
+<li>The synchronous replication uses Paxos.</li>
+</ul></li>
+<li>Scheduling layer.
+<ul>
+<li>Locking is done using 2PC with the requirements that locks are obtained in the pre-agreed upon global order.</li>
+<li>Transactions are written in C++, and read and write sets have to be set upfront.</li>
+<li>It is not stated in the paper explicitly, but it seems like the transactions themselves must be stored procedures and sent to the system. There doesn&#8217;t seem to be any logic to interactively relay information back to the client.</li>
+<li>Schedulers broadcast all reads to all nodes participating in the transaction, and then all nodes execute the transaction.</li>
+<li>Some transactions don&#8217;t know their read and write sets upfront, so they run <strong>optimistic lock location prediction</strong> (OLLP). It runs a query with loose consistency to guess the read and write sets and then submits it. If the read set changed, then the transaction is aborted.</li>
+</ul></li>
+</ul></li>
+<li>Calvin with Disk-Based Storage
+<ul>
+<li>Even though Calvin executes transactions in a pre-agreed upon ordering, the disk fetches performed by transactions do not need to be run in this order.</li>
+<li>Calvin can optimistically prefetch the data that will be read by a transaction before it has acquired its locks.</li>
+<li>Sequencers can also delay ordering a transaction until its resources will likely not already be locked.</li>
+</ul></li>
+<li>Checkpointing
+<ul>
+<li>Calvin can do a synchronous checkpoint in which an entire replica is frozen.</li>
+<li>Calvin can do a zig-zag checkpoint in which all writes after a point in the global log are written elsewhere.</li>
+<li>If the storage system supports multiversioning, then Calvin can perform a checkpoint using old versions of data.</li>
+</ul></li>
+<li>Questions
+<ul>
+<li>Q: Why is the storage layer so highly coupled with so many other layers?</li>
+<li>A: E.g. recovery logging cannot be physical, has to be logical. E.g. cannot do index range locks.</li>
+<li>Q: If the sequencers are ordering everything, running Paxos, delaying things for optimal disk access, is the contention footprint really gone? Or has it just moved into the sequencer instead of the scheduler?</li>
+<li>A: ???</li>
+</ul></li>
 </ul>
 <h1 id="spanner-googles-globally-distributed-database">Spanner: Google&#8217;s Globally-Distributed Database</h1>
 <ul>
