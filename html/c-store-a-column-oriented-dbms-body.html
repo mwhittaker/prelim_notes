@@ -33,32 +33,41 @@
 <li>We use two B+ trees. (1) We store columns as (value, storage key) with a B+ tree on the storage key. (2) We store a B+ tree mapping sort key to storage key.</li>
 <li>Join indexes are also partitioned to be colocated with their WS and RS counterparts.</li>
 </ul></li>
-<li>Updates and transactions
+<li>Updates
 <ul>
-<li>Tuples tagged with insertion and deletion epoch</li>
-<li>Low and high water mark set query interval</li>
-<li>Every tuple in RS was inserted before low watermark</li>
-<li>Single timestamp authority increments epochs</li>
+<li>Tuple are inserted into WS. To avoid requiring synchronization for assigned storage keys, nodes use a unique id plus a local counter to assign storage keys. The local counter is initialized to be bigger than the largest storage key in RS to ensure WS storage keys are consistent with RS storage keys.</li>
+<li>C-Store provides snapshot isolation for read-only transactions; a.k.a. read-only transactions read at some point in the past.</li>
+<li>Every tuple in WS is annotated with an insertion, and every tuple in RS and WS is annotated with a deletion time. A snapshot read at a certain time $t$ can only read tuples inserted before $t$ and deleted after $t$.</li>
+<li>C-Store maintains a <strong>low and high watermark</strong>. Snapshot reads can be issued for any time between the low and high watermark.</li>
+<li>Every tuple in RS is guaranteed to be inserted before the low water mark. But note that some WS tuples may also be inserted before the low watermark. Some tuples in the RS may also have been deleted before the low watermark.</li>
+<li>The timestamps are coarse-grained epochs where each epoch lasts a couple of seconds.</li>
+<li>To increase epochs and the high water mark, a centralized timestamp authority decides to increment the epoch and does so after a round of communication ensuring all nodes have finished the last epoch. The latest completed epoch is the high water mark.</li>
+</ul></li>
+<li>Transactions
+<ul>
+<li>Read-write transactions use distributed two-phase locking with deadlock detection based on timeouts.</li>
+<li>C-Store can commit a transaction without 2PC by not sending prepare messages or soliciting votes. The paper is short on details on how they pull this off.</li>
 </ul></li>
 <li>Recovery
 <ul>
-<li>Two-phase commit but no prepare messages are sent</li>
-<li>Recovering nodes gather information from other projections on other nodes</li>
-<li>Really complicated part of the paper</li>
+<li>Recovering nodes gather information from other projections on other nodes.</li>
+<li>This is a really complicated part of the paper.</li>
 </ul></li>
 <li>Tuple mover
 <ul>
-<li>Tuple mover moves tuples from WS into RS deleting those removed before low watermark</li>
-<li>Timestamp authority periodically increments low watermark</li>
+<li>Tuple mover moves tuples from WS into RS deleting the tuples in WS and RS that were deleted before the low watermark. Join indexes are also updated.</li>
+<li>The timestamp authority periodically increments low watermark.</li>
 </ul></li>
 <li>Query optimizer
 <ul>
-<li>Algorithms for e.g.&#160;decompressing, bitmap logic, applying bitmaps, concatenating projections etc</li>
-<li>Optimizer has to take into account the cost of decompressing and which projections to use</li>
+<li>C-Store has operators for e.g.&#160;decompressing, bitmap logic, applying bitmaps, concatenating projections, etc. The operators return 64 KB chunks of tuples.</li>
+<li>The optimizer has to take into account the cost of decompressing and which projections to use. A lot of this is left to future work.</li>
 </ul></li>
 <li>Questions
 <ul>
 <li>Q: The paper claims that row-storage &amp; B+ trees are write-optimized while other data structures like bit map indexes are read optimized. Why?</li>
 <li>A: A row store will only store one copy of a relation and use a bunch of B+ tree indexes to access it. Because we only store a relation once, it can only be clustered on one set of attributes. If we store multiple projects with different sort orders, we can traverse relations in different orders efficiently. Because the workload is read-only, maintaing these redundant copies is not expensive.</li>
+<li>Q: Both C-Store and Spanner use multiversioning and timestamps to allow lock-free snapshot isolation read-only transactions. Why is C-Store&#8217;s implementation so much simpler?</li>
+<li>A: ??? C-Store probably isn&#8217;t linearizable. Maybe not even serializable.</li>
 </ul></li>
 </ul>
