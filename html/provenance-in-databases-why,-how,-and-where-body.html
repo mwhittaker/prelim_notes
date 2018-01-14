@@ -1,39 +1,88 @@
 <h1 id="provenance-in-databases-why-how-and-where">Provenance in databases: Why, How, and Where</h1>
 <ul>
+<li>Overview
+<ul>
+<li>There is lineage, why-provenance, how-provenance, and where-provenance.</li>
+<li>There are two approaches to computing provenance: the <strong>eager</strong> approach and the <strong>lazy</strong> approach. In the eager approach, queries are transformed to compute some bookkeeping metadata which is stored alongside the output data. In the lazy approach, the query, input, and output are inspected to infer the provenance.</li>
+</ul></li>
 <li>Lineage
 <ul>
-<li>\bot vs empty lineage</li>
-<li>unique even for rewrites assuming queries don't have repeated relations</li>
-<li>WHIPS lazy lineage via reverse queries (1 reverse quer for simple queries, multiple for complex queries)</li>
+<li>The <strong>lineage</strong> of a tuple $t \in Op(R_1, \ldots, R_n)$ is a sequence $(R_1&#8217;, \ldots, R_n&#8217;)$ where $R_i&#8217; \subseteq R_i$ that satisfies three properties:
+<ol type="1">
+<li>$Op(R_1&#8217;, \ldots, R_n&#8217;) = \set{t}$. (&#8220;lineage is relevant&#8221;)</li>
+<li>For every $R_i&#8217;$ and for every $u \in R_i&#8217;$, $Op(R_1&#8217;, \ldots, \set{u}, \ldots R_n&#8217;) \neq \emptyset{}$. (&#8220;lineage doesn&#8217;t contain irrelevant facts&#8221;)</li>
+<li>The lineage is maximal. (&#8220;lineage is complete&#8221;)</li>
+</ol></li>
+<li>The original work on lineage provides lineage definitions for select, project, join, union, difference, and group by. Self-joins are not supported, and lineage is only defined for tuples that appear in the output. The original work also had a definition for the lineage of a composition of operators.</li>
+</ul></li>
+<li>Compositional Definition of Lineage
+<ul>
+<li>$\textsf{Lin}(Q, I, t)$ returns a subset of $I$.</li>
+<li>A tuple has empty lineage (i.e. $\emptyset$) if it was constructed from the query itself and has no lineage (i.e. $\bot$) if it does not appear in the query output at all.</li>
+<li>See paper for $\textsf{Lin}$ definition.</li>
+<li>Lineage is invariant to query rewrite assuming there are no repeated relations.</li>
+</ul></li>
+<li>WHIPS
+<ul>
+<li>WHIPS implements lineage lazily.</li>
+<li><p>WHIPS converts SPJ queries into PSJ normal form and generates a reverse query to extract the lineage. For example, the lineage of the tuple <code>(1, 2)</code> from the query</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">SELECT</span> R.a, S.c</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">FROM</span> R, S</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">WHERE</span> R.b = S.b <span class="kw">AND</span> S.d = <span class="dv">12</span></a></code></pre></div>
+<p>can be computed with the query</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">SELECT</span> *</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">FROM</span> R, S</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">WHERE</span> R.b = S.b <span class="kw">AND</span> S.d = <span class="dv">12</span> <span class="kw">AND</span> R.a = <span class="dv">1</span> <span class="kw">AND</span> S.c = <span class="dv">2</span></a></code></pre></div></li>
+<li>WHIPS can also handle generic SPJUAD queries by compiling a query into multiple reverse queries. At a high level, the query is divided into AUSPJ segments, and each segment is materialized. Then, reverse queries are run backwards through the segments.</li>
 </ul></li>
 <li>Why-provenance
 <ul>
-<li>Witnesses (subset sufficient to produce tuple)</li>
-<li>Proof witnesses and witness basis</li>
-<li>Size of proof bounded by size of query</li>
-<li>Minimal witnesses = minimal why provenance</li>
-<li>View deletion with 2 objectives: minimize changes to view and minimze changes to database</li>
+<li>A witness of an output $t$ with respect to query $Q$ is a subset $I&#8217; \subseteq I$ such that $t \in Q(I&#8217;)$.</li>
+<li>The why-provenance of a tuple is a subset of the <strong>witness basis</strong> (the set of all witnesses of the tuple).</li>
+<li>See paper for why-provenance rules.</li>
+<li>An element of the why-provenance is called a <strong>proof-witness</strong>. Every witness is a superset of a proof-witness.</li>
+<li>Minimal witness basis (the minimum elements of the witness basis) and minimal why-provenance (the minimum elements of the why provenance) are the same and are invariant to query rewrites.</li>
+</ul></li>
+<li>View Deletion Problem
+<ul>
+<li>View deletion is closely related to why-provenance. If we want to remove a tuple from a view, we have to remove a tuple from every proof-witness.</li>
+<li><strong>View side-effect problem</strong>: Given a source database $I$, a query $Q$, the view $V = Q(I)$, and a tuple $t \in V$, find a subset $\Delta I \subset I$ whose removal will delete $t$ from $V$ while minimizing the number of other tuples deleted from the view.</li>
+<li><strong>Source side-effect problem</strong>: Given a source database $I$, a query $Q$, the view $V = Q(I)$, and a tuple $t \in V$, find the smallest subset $\Delta I \subset I$ whose removal will delete $t$ from $V$.</li>
 </ul></li>
 <li>How-provenance
 <ul>
-<li>Union and projection sum; join multiplies</li>
-<li>Provenance is N[TupleLoc] polynomial ring</li>
-<li>K-relational algebra subsumes relational and set algebra</li>
+<li>A commutative semiring is a commutative ring with identity in which there may not be additive inverses.</li>
+<li>A $K$-relation is a function mapping tuples to elements of the commutative semiring $K$.</li>
+<li>See paper for rules on evaluating queries over $K$-relations.</li>
+<li>The how-provenance of a tuple $t$ with respect to a query $Q$ is $Q(I)(t)$ where $I$ is interpreted as a $\mathbb{N}[TupleLoc]$-relation.</li>
 </ul></li>
 <li>Trio
 <ul>
-<li>Store likelihood and and/or provenance with each tuple</li>
-<li>Likelihood is derived from and/or provenance</li>
+<li>Trio computes the lineage of select, project, join, union, intersect, difference, duplicate elimination, and group by as polynomials. When looking only at the basic select, project, join, union, it is exactly like how-provenance.</li>
+<li>Given the provenance of a tuple, we can compute the likelihood of its existence. For example, if the lineage of a tuple is $t_1 (t_2 + t_3)$, then the its likelihood is $Pr(t_1 \land (t_2 \lor t_3))$.</li>
 </ul></li>
-<li>Provenance semirings and recursion
+<li>Provenance Semirings and Recursion
 <ul>
-<li>N^\inf[TupleLoc] power series provenance</li>
-<li>Proof based (infinite sum of products of leafs of proofs) and least fixpoint (set of recursive equations)</li>
-<li>ORCHESTRA and Routes/Spider
+<li>Green et al.&#160;extended $K$-relation queries to datalog.</li>
+<li>Now, how-provenance are formal power series $\mathbb{N}^\infty[[TupleLoc]]$. These can be thought of as a product of a sum of all proof tree leaves or as a solution to a recursive set of equations.</li>
+</ul></li>
+<li>Schema Mappings
 <ul>
-<li>Schema mapping</li>
-<li>ORCHESTRA stores mapping provenance for trust filtering and incremental updates</li>
-<li>Spider has routes which show how tuples were derived too; for debugging</li>
+<li>Schema mappings
+<ul>
+<li>A schema mapping maps a source schema to a target schema through a set of source-to-target dependencies (e.g. $\text{Agencies}(n,b,p)$ $\implies$ $\exists I. \text{Tripts}(I, n, p)$) and target dependencies (e.g. $\text{Transportation}(i, t, p)$ $\implies$ $\exists N. \exists P. Trips(i, N, P).$).</li>
+</ul></li>
+<li>ORCHESTRA
+<ul>
+<li>Given a source instance, a target instance, and a schema mapping that connects the two, ORCHESTRA will derive target tuples and put them into the target database whenever tuples are inserted in the source database. The provenance of these target tuples is stored eagerly.</li>
+<li>The provenance is used for two things: trustworthiness filtering and incremental deletion.</li>
+<li><strong>Trustworthiness filtering</strong>: If a source tuple or mapping is deemed untrustworthy, then all tuples derived from it (checked using provenance) are excluded from the target database.</li>
+<li><strong>Incremental deletion</strong>: When tuples are deleted from the source database, provenance is used to determine which tuples in the target database need to be deleted.</li>
+</ul></li>
+<li>Routes and SPIDER
+<ul>
+<li>Spider has routes which show how tuples are derived from one another. This is useful for debugging.</li>
+<li>There&#8217;s a bunch of other super complicated stuff too; see paper for details.</li>
 </ul></li>
 </ul></li>
 </ul>
