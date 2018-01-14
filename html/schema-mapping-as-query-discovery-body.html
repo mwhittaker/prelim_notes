@@ -1,20 +1,37 @@
 <h1 id="schema-mapping-as-query-discovery">Schema Mapping as Query Discovery</h1>
 <ul>
-<li>Schema assertions vs value correspondences (maps source attrs to output attrs</li>
-<li>a filter)</li>
-<li>Advantages of value correspondences (easier to write; more like programming by example)</li>
-<li>Algorithm has to figure out how to join stuff to implement the value correspondences</li>
-<li>Heuristics: prefer N:1 joins and then outer joins; union stuff together</li>
-<li>Algorithm:
+<li>Overview
 <ul>
-<li>Generate candidate sets</li>
-<li>Follow foreign keys and prompt user for joins, pruning bad ones</li>
-<li>Construct value correspondence cover with fewest candidate sets</li>
-<li>Generate a SQL query for each candidate set</li>
+<li>We have a source database and a target database with a different schema. The user specifies how to map tuples from the source to the target, and the systems figures out a SQL query to do the mapping.</li>
 </ul></li>
-<li>Incremental algorithm
+<li>Value Correspondences
 <ul>
-<li>Given a new value correspondence, create a new cover for each insertion into a candidate set</li>
-<li>Ask user to rank</li>
+<li>Existing work on schema mapping involved set-based <strong>schema assertions</strong>. This paper proposes <strong>value correspondences</strong> which instead involve showing how pairs of tuples map to another tuple. This is arguably easier to understand and can lead to automatically finding a query to perform the mapping.</li>
+<li>At a high level, a value correspondence is (1) a function mapping a tuple of source tuples to an output tuple and (2) a filter on the source tuples.</li>
+<li>For example, a user might specify that <code>PayRate(HourlyRate) * WorksOn(Hours)</code> equals <code>Personnel(Salary)</code>, and it is the job of the system to find a query which decides which tuples from <code>PayRate</code> and which tuples from <code>WorksOn</code> to join.</li>
+<li>Principled heuristics:
+<ul>
+<li>Every source tuple should contributed to at most one output tuple. This implies to use joins instead of cross products.</li>
+<li>Every source tuple should contribute to at least one output tuple. This implies to use unions over intersections and outer joins over inner joins.</li>
+</ul></li>
+</ul></li>
+<li>Query Discovery Algorithm
+<ul>
+<li>Formally, a value correspondence is a pair $(f, p)$ of a mapping function $f$ and predicate $p$. $f$ maps values drawn from the domain of source attributes to a single value from the domain of a target attribute. $p$ is a boolean function on some (possible different) set of source attributes. Both functions can also take in attribute metadata ( e.g.&#160;attribute name, relation name, low and high value, etc.)</li>
+<li>Consider source relations $R(a, b)$ and $S(c, d)$ and target relation $T(x, y)$. Say we have correspondences $v_1: (R.a, R.b) \to T.x$, $v_2: S.c \to T.y$, and $v_3: R.b, S.c \to T.x$ The algorithm proceeds in four steps.
+<ul>
+<li>First, we group correspondences into <strong>candidate sets</strong> where each candidate set maps to each output attribute at most once. In our example, this is $\{\set{v_1, v_2}$, $\set{v_2, v_3}$, $\set{v_1}$, $\set{v_2}$, $\set{v_3}$, $\emptyset{}\}$. If a candidate set maps to <em>every</em> output attribute, then we call it a <strong>complete candidate set</strong>.</li>
+<li>Second, we try to find a good join order for all the candidate sets that read from multiple relations. We try to infer join orders using foreign keys, asking the user for help otherwise. If no join order is found, we discard the candidate set. This might leave us with $\{\set{v_1, v_2}$, $\set{v_1}$, $\set{v_2}$, $\set{v_3}$, $\emptyset{}\}$.</li>
+<li>Third, we find a subset (called a <strong>cover</strong>) of all the candidate sets that includes all value correspondences. We prefer smaller covers and covers which produce fewer null outputs. For example, we might select the cover $\set{\set{v_1, v_2}, \set{v_3}}$.</li>
+<li>Fourth, we generate a query for every candidate set in the best cover and union them all together. Value correspondences go in the <code>SELECT</code> and filters go in the <code>WHERE</code>.</li>
+</ul></li>
+</ul></li>
+<li>Making the Algorithm Incremental
+<ul>
+<li>Consider we have a cover $\{\set{v_1, v_2}$, $\set{v_3}$, $\set{v_4, v_5}\}$. If we get a new value correspondence $+v_6$, then we try to insert $v_6$ into every candidate set in the cover. This will give us three alternative covers. These new covers are given to the user to rank.</li>
+</ul></li>
+<li>Nested-Sets in Target Relations
+<ul>
+<li>Clio can also target nested relational output schemas by compiling to nested SQL queries.</li>
 </ul></li>
 </ul>
