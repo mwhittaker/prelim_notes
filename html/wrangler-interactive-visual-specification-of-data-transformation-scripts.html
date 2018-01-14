@@ -11,28 +11,50 @@
     <a href="../">Prelim Notes</a>
   </div>
   <div id="container">
-<h1 id="wrangler-interactive-visual-specification-of-data-transformation-scripts">Wrangler: Interactive Visual Specification of Data Transformation Scripts</h1>
+<h1 id="wrangler-interactive-visual-specification-of-data-transformation-scripts"><a href="https://scholar.google.com/scholar?cluster=4069328732173546194">Wrangler: Interactive Visual Specification of Data Transformation Scripts</a></h1>
 <ul>
-<li>Table on right, transforms and suggestions on left, data quality meter on top</li>
-<li>Transform language
+<li>Overview
 <ul>
-<li>Maps, lookups, joins, reshaping, positional, sorting, aggregating</li>
+<li>Data scientists spend an inordinate amount of their time wrangling data. Wrangler makes data wrangling much easier.</li>
 </ul></li>
-<li>Data types and semantic roles</li>
-<li>Features
+<li>Example workflow
 <ul>
-<li>Direct manipulation</li>
-<li>Automatic suggestion</li>
-<li>Menu-based transform selection</li>
-<li>Manual editing of transform parameters (in English)</li>
+<li>See the paper for an example workflow in which the analyst loads a CSV file, deletes empty rows, extracts the state name from some text, fills in missing entries in the state column, deletes some more rows, and then generates a pivot table.</li>
+<li>The Wrangler UI consists of a table of data on the right, transforms and suggestions on left, and a data quality meter on the top above each column.</li>
 </ul></li>
-<li>Visualize selections</li>
-<li>Export history to script</li>
-<li>Change history of script</li>
+<li>Wrangler Transformation Language
+<ul>
+<li>Wrangler specifies transforms as a declarative transformation language.</li>
+<li><strong>Map</strong> transforms map one row to zero (filter), one (map), or many (split) rows.</li>
+<li><strong>Lookups and joins</strong> can be used to integrate external data like mappings from zip code to state or correcting typos.</li>
+<li><strong>Reshape</strong> transforms reorganizes the shape of the table, similar to pivot tables.</li>
+<li><strong>Positional</strong> transforms fill data from neighboring data or shift data around within the table.</li>
+<li>Wrangler also has transforms for <strong>sorting</strong>, <strong>aggregation</strong>, etc.</li>
+<li>Wrangler also has the notion of <strong>data types</strong> (e.g.&#160;int, string) and <strong>semantic roles</strong> (e.g.&#160;zip code).</li>
+</ul></li>
+<li>Wrangler Interface Design
+<ul>
+<li>Direct manipulation and visual selections.</li>
+<li>Automatic suggestion with an inference engine.</li>
+<li>Menu-based transform selection.</li>
+<li>Natural language descriptions and in-place visual transform previews.</li>
+<li>Manual editing of transform parameters.</li>
+<li>Export history to script and change history of script.</li>
+<li>Users can place comments on the transformations.</li>
+<li>Data quality bar with green (satisfies data type and semantic role), yellow (satisfies data type but not semantic role), red (doesn&#8217;t satisfy data type), and gray (missing).</li>
+</ul></li>
 <li>Inference algorithm
 <ul>
-<li>Somewhat exhaustively generate a list of possible transforms; filling in parameters with corpus of previous data</li>
-<li>Prefer simple transforms and those that appeared in the past</li>
+<li>There are four types of parameters: row selections, column selections, text selections and enumerables.</li>
+<li>The inference algorithm proceeds in the following phases: infer parameters, generate a list of transforms, rank the transforms.</li>
+<li>Inferring parameters involves looking at what&#8217;s clicked and inferring some regular expressions.</li>
+<li>Enumerating transforms is simple. It tries every transform on every parameter.</li>
+<li>The ranking engine prefers simple transform types (e.g.&#160;column) over other more complicated ones (e.g.&#160;row selection). Within a type, it filters based on frequency within a corpus of user interactions. It also ensures a diversity of different operations are suggested.</li>
+</ul></li>
+<li>Questions
+<ul>
+<li>Q: What makes Wrangler&#8217;s transformation language declarative?</li>
+<li>A: ???</li>
 </ul></li>
 </ul>
   </div>
