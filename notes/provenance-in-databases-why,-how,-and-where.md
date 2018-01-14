@@ -1,4 +1,4 @@
-# Provenance in databases: Why, How, and Where
+# [Provenance in Databases: Why, How, and Where](https://scholar.google.com/scholar?cluster=14688264622623487965)
 - Overview
     - There is lineage, why-provenance, how-provenance, and where-provenance.
     - There are two approaches to computing provenance: the __eager__ approach
