@@ -1547,40 +1547,58 @@ Paxos Group 3 (coordinator)
 <li>Interpreter magic</li>
 <li>Evict partitions on an RDD level LRU; unless LRU is same RDD</li>
 </ul>
-<h1 id="combining-systems-and-databases-a-search-engine-retrospective">Combining Systems and Databases: A Search Engine Retrospective</h1>
+<h1 id="combining-systems-and-databases-a-search-engine-retrospective"><a href="https://scholar.google.com/scholar?cluster=15869287167041695406">Combining Systems and Databases: A Search Engine Retrospective</a></h1>
 <ul>
-<li>Tenets of databases
+<li>Overview
 <ul>
-<li>declarative query languages and optimization</li>
-<li>well-defined semantics</li>
-<li>strong fault tolerance</li>
+<li>This paper presents a retrospective on nine years of work on the Inktomi search engine and discusses how to architect a search engine using database principles.</li>
 </ul></li>
-<li>Queries based on words and properties</li>
-<li>Documents ranked based on document quality and word-document scoring</li>
-<li>Crawler, indexer, server</li>
-<li>Store documents, inverted indexes, and term info in relations</li>
-<li>Compile logical queries to access paths</li>
-<li>Optimizer caches all intermediate results and re-uses cached results when possible</li>
-<li>Horizontally partition everything, compute local top-k results and then aggregate</li>
-<li>Optimization: compress inverted index</li>
-<li>Optimization: master lower bound top-k to prune</li>
+<li>The Principles of Databases
+<ul>
+<li><strong>Top down design</strong>: design the semantics, then implement the mechanisms.</li>
+<li><strong>Data independence</strong>: the independence of data representation and storage.</li>
+<li><strong>Declarative query languages</strong>: declarative queries which are optimized.</li>
+</ul></li>
+<li>Overview
+<ul>
+<li>A crawler surfs the web, the indexer builds inverted indexes and scores documents, and the server parses, optimizes, and executes queries.</li>
+<li>Queries consist of words (e.g.&#160;java, coffee, hamster) and properties (lang:english, contains:image) and return the documents with the given words that satisfy the given properties. Search results are scored based on document quality and the score of the words within the document (as determined by the indexer).</li>
+</ul></li>
+<li>Logical Query Plan
+<ul>
+<li>We store information in relations with one relation for the documents, one for the inverted index for words, and one for the inverted index for properties.</li>
+<li>The query language is boolean expressions over words and filters with special care to only negate filters.</li>
+</ul></li>
+<li>Query Implementation
+<ul>
+<li>The query optimizer translates a logical query into a physical query with four operators (that I don&#8217;t fully understand).</li>
+<li>The optimizer prefers flatter query plans with multiway pre-sorted merge joins on inverted indexes.</li>
+<li>The query evaluator doesn&#8217;t pipeline and caches intermediate results for later.</li>
+<li>The query optimizer goes top-down to help find the largest cached subexpression.</li>
+<li>The inverted indexes and document relations are horizontally partitioned on the document id.</li>
+<li>A load balancer sends a query to a master. The master optimizes the query and sends it to all the workers who find the top $k$ documents within their range of document ids. The master computes the global top $k$ and then looks up these top $k$ documents from the workers.</li>
+<li>Nodes can compress the indexes (much like in a column store). Master can also send out top $k$ results to the suboordinates which they can use to prune their search space.</li>
+</ul></li>
 <li>Updates
 <ul>
-<li>Tuples swapped out by crawler in chunks (atomically rewriting version vectors)</li>
-<li>Small deletion cache for real-time deletes of bad results</li>
+<li>The document and indexes relations are divided into chunks. The indexer and crawler create updates and insertions on the granularity of a chunk.</li>
+<li>Every chunk is versions; versions are used for cache invalidation, debugging, rollback, etc. Upgrading to a new version involves atomically swapping to a new version.</li>
+<li>We can also store a small deletion cache for real-time deletions of bad or illegal results.</li>
 </ul></li>
 <li>Fault tolerance
 <ul>
-<li>If a chunk is lost, it will be re-indexed</li>
-<li>Primary backup for faster recovery</li>
-<li>Gracefully degrade by looking at fewer chunks or rejecting expensive queries</li>
+<li>Fault tolerance is rather trivial for a search engine since it doesn&#8217;t store the master copy of the data and because availability is favored over anything else.</li>
+<li>Popular chunks can be replicated; others don&#8217;t need to be.</li>
+<li>Whenever a node fails, the query can be retried elsewhere.</li>
+<li>A search engine can gracefully degrade under heavy load by only searching a subset of the chunks or by outright rejecting expensive queries.</li>
+<li></li>
 </ul></li>
-<li>Misc
+<li>Other Topics
 <ul>
-<li>Personalization: cookie stores id of database entry</li>
-<li>Logging: search engines make a lot of logs and need custom database engines</li>
-<li>Query rewriting: rewrite query using context of current page</li>
-<li>Phrase queries: e.g. &quot;New York&quot; search engine need nearness metrics</li>
+<li><strong>Personalization</strong>: cookies can either store metadata or the id of a database entry which contains the metadata.</li>
+<li><strong>Logging</strong>: search engines make a lot of logs and need custom database engines.</li>
+<li><strong>Query rewriting</strong>: search engines can rewrite a query using context of current page.</li>
+<li><strong>Phrase queries</strong>: e.g. &#8220;New York&#8221; search engine need nearness metrics.</li>
 </ul></li>
 </ul>
 <h1 id="the-anatomy-of-a-large-scale-hypertextual-web-search-engine">The Anatomy of a Large-Scale Hypertextual Web Search Engine</h1>
