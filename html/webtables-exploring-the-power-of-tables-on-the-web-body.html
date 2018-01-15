@@ -1,25 +1,30 @@
-<h1 id="webtables-exploring-the-power-of-tables-on-the-web">WebTables: Exploring the Power of Tables on the Web</h1>
+<h1 id="webtables-exploring-the-power-of-tables-on-the-web"><a href="https://scholar.google.com/scholar?cluster=11659194181134800008">WebTables: Exploring the Power of Tables on the Web</a></h1>
 <ul>
-<li>Scrape tables, filter bad one, create search engine + db admin tools</li>
-<li>Scraping tables
+<li>Overview
 <ul>
-<li>Scrape 14.1 billion tables from Google</li>
-<li>Filter bad ones using hand-written classifiers and classifiers trained on hand-labelled data</li>
-<li>Prefer recall over precision (later pipeline will filter)</li>
-<li>Another classifier to get schema</li>
-<li>Build ACSDb schema -&gt; frequency</li>
+<li>The authors scrape a bunch of tables from the internet, filter out the ones that aren&#8217;t relational, and create a relation search engine and some database adminstration tools.</li>
 </ul></li>
-<li>Relation search
+<li>Scraping Relations
 <ul>
-<li>Just search google</li>
-<li>Rank using classifier trained on features like hits in header, hits in first column, etc</li>
-<li>Rank using classifier and a measure of the schema coherency using ACSDb</li>
-<li>inverted index from word to table(x, y)</li>
+<li>The authors scraped 14.1 billion tables from Google and filtered the bad ones using hand-written classifiers and classifiers trained on hand-labelled data.</li>
+<li>The classifiers preferred recall over precision (later pipeline will filter the bad tables).</li>
+<li>The authors used a separate classifier to predict the schema of the relations.</li>
+<li>The <strong>attribute correlation statistics database</strong> (ACSDb) maps schemas in the corpus (ignoring the order of the attributes) to their frequency.</li>
+<li>The ACSDb can be used to compute the likelihood of a certain attribute appearing in a schema or the likelihood of a certain attribute appearing in a schema conditioned on the fact that some other attribute appears.</li>
 </ul></li>
-<li>ACSDb
+<li>Relation Search
 <ul>
-<li>Schema autocomplete: most likely attribute conditioned on existing attributes</li>
-<li>Attribute synonym finding: likelihood of two synonyms appearing is low and conditioning on either word has similar effect</li>
-<li>Join graph traversal: clusters neighbor of a node based on how similar they are</li>
+<li>Relations are ranked by one of following ranking functions which take in a query and a top $k$ parameter and output the (at most) $k$ highest scored relations.</li>
+<li><strong>naiveRank</strong>: This ranking function sends the query to Google and returns the relations found on the top $k$ results.</li>
+<li><strong>filterRank</strong>: This ranking function sends the query to Google and returns the first $k$ encountered relations.</li>
+<li><strong>featureRank</strong>: This ranking function scores relations using a linear regression estimator trained on manually labelled (query, relation) pairs. The estimator uses features like the number of null, the number of rows, the number of columns, the number of hits in the schema, the number of hits in the leftmost row, etc.</li>
+<li><strong>schemaRank</strong>: This ranking function scores relations as in featureRank, but also uses a measure of the average PMI of all attributes of a schema where the PMI of two attributes $\log(\frac{p(a, b)}{p(a)p(b)})$ is a measure of how likely the two attributes are to appear together.</li>
+<li>WebTables uses an inverted index from word to (relation, (row, column)) pairs instead of the more typical (document, offset) pairs.</li>
+</ul></li>
+<li>ACSDb Applications
+<ul>
+<li><strong>Schema Auto-Complete</strong>: The user types in some attributes, and WebTables suggests the most likely other set of attributes given the attributes already provided.</li>
+<li><strong>Attribute Synonym-Finding</strong>: Given a set of attributes, the attribute synonym-finder outputs a set of likely synonym pairs. It takes advantage of the fact that the likelihood of two synonyms appearing is low and conditioning on either word has similar effect</li>
+<li><strong>Join Graph Traversal</strong>: A join graph has a vertex for every schema and an edge between schemas if they share an attribute. The graph can be noisy, so we cluster things together. Given a vertex, we cluster two neighbors together if the vertex plays a similar role in relation to the two.</li>
 </ul></li>
 </ul>
