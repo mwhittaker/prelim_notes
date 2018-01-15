@@ -13,40 +13,50 @@
   <div id="container">
 <h1 id="the-anatomy-of-a-large-scale-hypertextual-web-search-engine">The Anatomy of a Large-Scale Hypertextual Web Search Engine</h1>
 <ul>
-<li>Novel features
+<li>Overview
 <ul>
-<li>PageRank</li>
-<li>Associating anchor text with site pointed to</li>
-<li>Score words based on boldness</li>
+<li>In this paper, Larry and Sergey present the design of Google</li>
+</ul></li>
+<li>Design Goals
+<ul>
+<li>Improve search quality. Search engines at the time were <em>really</em> bad.</li>
+<li>Provide a database of web pages and web searches to foster academic research on search engines.</li>
+</ul></li>
+<li>System Features
+<ul>
+<li><strong>PageRank</strong>: Given a site $A$ with incoming links from sites $T_1, \ldots, T_n$ and a damping factor $d$. The PageRank of the site satisfies the equation $PageRank(A) = (1 - d) + d\sum_{i=1}^n \frac{PageRank(T_i)}{OutDegree(T_i)}$.</li>
+<li><strong>Anchor text</strong>: Google associates the text of a link with the site the link points to.</li>
+<li><strong>Word location</strong>: Google records the location of every word found in a document to score documents based on where the words appear.</li>
+<li><strong>Word font</strong>: Google records the size and boldness of a word in a document to score documents based on how important a word seems.</li>
 </ul></li>
 <li>Architecture
 <ul>
-<li>URL server to crawlers to repository</li>
-<li>Indexer builds forward index from repo</li>
-<li>URL resolver builds graph for pagerank</li>
-<li>Sorted inverts indexes</li>
+<li>A <strong>URL server</strong> sends batches of URLs to a set of <strong>web crawlers</strong>. The web crawlers send web pages to a <strong>store server</strong> which compresses the web pages and puts them into a <strong>repository</strong>.</li>
+<li>The <strong>indexer</strong> builds a forward index mapping documents to hits and stores it in a set of <strong>barrels</strong>. It also extracts all the anchors into a database. A <strong>URL resolver</strong> resolves the relative URLs to absolute URLs and generates a graph for PageRank. It also stores the anchor text of the pointed to documents in the forward index.</li>
+<li>A <strong>sorter</strong> periodically inverts the index in place, changing the mapping from (document to words) to (word to documents).</li>
 </ul></li>
-<li>Data structures
+<li>Data Structures
 <ul>
-<li>BigFiles</li>
-<li>Repository: fat file of HTML contents</li>
-<li>Document index: ISAM index into repo</li>
-<li>Lexicon: long list of words</li>
-<li>Hit lists, forward index, reverse index</li>
+<li><strong>BigFiles</strong>: really big files.</li>
+<li><strong>Repository</strong>: a fat file of (doc id, length, url, compressed page) tuples.</li>
+<li><strong>Document index</strong>: an ISAM index mapping doc ids to metadata, statistics, and pointers into the repository.</li>
+<li><strong>Lexicon</strong>: a long list of words kept in memory.</li>
+<li><strong>Forward index</strong>: the forward index is partitioned by word and stored sorted by doc id. Hit lists (lists of word occurrences in a file) is super compressed.</li>
+<li><strong>Inverted index</strong>: there are two reverse indexes: one mapping to words to documents in which the word is important and another full inverted index.</li>
 </ul></li>
 <li>Crawling
 <ul>
-<li>Python program with 300 open connections, event loops, async IO, local DNS cache</li>
-<li>Most fragile part of whole operation</li>
+<li>The crawler was a Python program with 300 open connections, event loops, async IO, and local DNS cache. It was the most fragile part of whole operation.</li>
 </ul></li>
 <li>Indexing
 <ul>
-<li>Custom HTML parser for exotic HTML</li>
-<li>Collects new words to add to lexicon and adds them in batch</li>
+<li>Larry and Sergey had to write a custom HTML parser to handle exotic HTML and to run efficiently.</li>
+<li>The system collects new words to add to lexicon and then adds them in batch later.</li>
 </ul></li>
 <li>Search
 <ul>
-<li>Find words in index and rank them</li>
+<li>For single word queries, documents are ranked based on a lot of factors including the frequency of the words, the boldness of the words, PageRank, etc.</li>
+<li>For multiword queries, the words are scored as before but additionally with the proximity of the words being taken into account.</li>
 </ul></li>
 </ul>
   </div>
