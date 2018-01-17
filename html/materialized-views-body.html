@@ -1,54 +1,136 @@
 <h1 id="materialized-views">Materialized Views</h1>
 <ul>
-<li>View maintenance
+<li>Overview
 <ul>
-<li>Homomorphic select</li>
-<li>Distributive join</li>
-<li>Derivation counting for poject (a drawback of the algebra approach)</li>
-<li>Drawbacks of delta tables (top-k query and group by sum)</li>
-<li>Summary-delta encoding of changes (e.g. total sales per item and store)</li>
-<li>Optimizer should weigh updates against recomputation</li>
-<li>We can maintain multiple views at once sometimes faster than all of them individually</li>
-<li>Different views require different amounts of data (sometimes deltas, sometimes view, sometimes base data)</li>
-<li>It's preferable to not depend on everything to maintain a view</li>
-<li>Irrelevant updates (only look at deltas)</li>
-<li>Self-maintainable view (look at view, but don't look at base data)</li>
-<li>Runtime self-maintainable view (look at biew, but only look at base data sometimes)</li>
-<li>We can materialize views as more than just tables (e.g. join views with pointers into base tables)</li>
-<li>We can also maintain auxiliary views to speed up maintenace</li>
-<li>Immediate vs deferred update</li>
-<li>Imagine two transactions that update different rows in the same group; immediate update with write locks would have them conflict on the group (can use special locking protocols)</li>
+<li>There are three challenges surrounding materialized views.</li>
+</ul>
+<ol type="1">
+<li><strong>Maintaining materialized views</strong>. When the base data is changed, how do we update the view efficiently?</li>
+<li><strong>Using materialized views</strong>. Given a query which may not be over a view, how can we rewrite it to one that does use views?</li>
+<li><strong>Selecting views to materialize</strong>. Given a workload, which views should we make?</li>
+</ol></li>
+<li>tl;dr
+<ul>
+<li>The algebraic approach is simple and elegant.</li>
+<li>However, it has some shortcomings. Counting and alternative representations of changes can be more efficient for things like projections, grouped sums, top-$k$ queries, etc.</li>
+<li>Some views need more information to maintain than others: irrelevant updates, self-maintainable views, runtime self-maintainable views.</li>
+<li>Sometimes it&#8217;s more efficient to materialize a view as something other than a table or to store auxiliary information to make it easier to maintain a view.</li>
+<li>We can maintain views immediately or deferred.</li>
+<li>Using views amounts to asking (1) can I answer a query with only views,
+<ol start="2" type="1">
+<li>what&#8217;s the largest number of tuples I can derive for a query with only views, and (3) what is the most efficient way to evaluate a query with views and base tables. Answering these questions involves tools for query equivalence and maximal containment.</li>
+</ol></li>
+<li>Views can be used for data integration using global-as-view (with view expansion) or local-as-view (with view rewriting).</li>
 </ul></li>
-<li>Using views
-<ol style="list-style-type: decimal">
-<li>Can we answer a query with just views?</li>
-<li>Can we get a maximal subset of a query with just views?</li>
-<li>What is the fastest way to compute a query given views?</li>
+<li>Maintaining Materialized Views
+<ul>
+<li>There are many settings in which a view might have to be updated: the base data changes, the view query changes, the base schema changes, something is inserted into the view, etc. Here, we only consider when the base data changes.</li>
+<li>We model a view as a pair $(Q_v, T_v)$ of the view defining query $Q_v$ and the current contents of the view $T_v$ (which is equal to $Q_v(D)$ if it is up-to-date).</li>
+</ul></li>
+<li>The Algebraic Approach to View Maintenance
+<ul>
+<li>In the algebraic approach to view maintenance, we model modifications to a base table as a set of deletions $\nabla R$ and insertions $\Delta R$ and use a set of <strong>propagation equations</strong>.</li>
+<li>For example, selection is homomorphic with respect to union (i.e. $\sigma(x \cup y) = \sigma(x) \cup \sigma(y)$) and negation (i.e. $\sigma(x - y) = \sigma(x) - \sigma(y)$) and join distributes over union (i.e. $x \bowtie (y \cup z) = (x \bowtie y) \cup (x \bowtie z)$) and negation (i.e. $x \bowtie (y - z) = (x \bowtie y) - (x \bowtie z)$).</li>
+<li><p>Thus, given a view like $\sigma(R) \bowtie S$ and changes $\Delta R$ and $\Delta S$, we can compute</p>
+<pre><code>$$
+\sigma(R \cup \Delta R) \bowtie (S \cup \Delta S) =
+    (\sigma(R) \bowtie S)
+    \cup (\sigma(\Delta R) \bowtie S)
+    \cup (\sigma(R) \bowtie \Delta S)
+    \cup (\sigma(\Delta R) \bowtie \Delta S)
+$$</code></pre></li>
+<li><p>Alternatively, we can compute the changes one at a time much simpler by updating the view and the base relations in step. Here, we show the steps for updating the views, but you have to interleave updates to the base tables as well.</p>
+<pre><code>$$
+\begin{align*}
+  T_v &amp;\gets T_v - (\sigma(\nabla R) \bowtie S) \\
+  T_v &amp;\gets T_v \cup (\sigma(\Delta R) \bowtie S) \\
+  T_v &amp;\gets T_v \cup (\sigma(R) \bowtie \Delta S) \\
+\end{align*}
+$$</code></pre></li>
+<li>The algebraic approach is simple but can be inefficient.</li>
+</ul></li>
+<li>Derivation Counting
+<ul>
+<li>The algebraic approach cannot handle projections well because it doesn&#8217;t know how many input tuples contribute to an output tuple.</li>
+<li>As a workaround, we can keep a count of the number of derivations of an output tuple, deleting it when the number of derivations falls to zero.</li>
+</ul></li>
+<li>Alternative Representations of Changes
+<ul>
+<li>The algebraic approach represents changes as a pair of $\nabla R$ and $\Delta R$ tables. This is simple, but sometimes inefficient.</li>
+<li>For example, imagine updating tuples that feed into a grouped sum. We do not need to recompute the old value and subtract and add out the new value. Instead, we can compute the incremental difference that the new updates make.</li>
+<li>Similarly, if we update a tuple in a top-$k$ query in a way that doesn&#8217;t remove it from the top $k$, we do not have to compute the $k+1$th element.</li>
+</ul></li>
+<li>Implementation and Optimization
+<ul>
+<li>Incremental maintenance is sometimes more expensive than simply recomputing the view. The query optimizer should decide when to incrementally maintain and when to recompute.</li>
+<li>Sometimes multiple views can be maintained more efficiently than a single view (e.g.&#160;by not redundantly recomputing common subexpressions).</li>
+</ul></li>
+<li>Information Available to Maintenance
+<ul>
+<li>Sometimes maintenance depends on more than base tables and deltas. Also, knowing certain database constraints can improve maintenance. For example, imagine maintaining a query like $\pi_{\text{name}}(\sigma_{\text{price} &gt; 100}(R))$. When inserting a tuple, we have to read the view to see if it already exists, unless we know that name is a key, in which case we don&#8217;t.</li>
+<li>An <strong>irrelevant update</strong> is an update to a base table which does not affect the view. The paper references (but does not describe in detail) some algorithms to detect irrelevant updates.</li>
+<li>A view (or set of views) is <strong>self-maintainable</strong> (with respect to a certain type of update) if it can be maintained using itself and the deltas but without the base tables. For example, the view $R \bowtie S$ is self-maintainable with respect to insertions into $R$ if we have an appropriate foreing key from $S$ into $R$. The paper mentions (but doesn&#8217;t describe in detail) algorithms to determine whether a view is self-maintainable.</li>
+<li>A view is <strong>runtime self-maintainable</strong> with respect to an update $\delta$ if it can be maintained only using itself and $\delta$. The paper doesn&#8217;t describe any algorithm for checking runtime self-maintainability.</li>
+</ul></li>
+<li>Materialization Strategies
+<ul>
+<li>Sometimes, it can be more efficient not to materialize a materialized view as an actual table. Instead, it can be stored using some other more efficient data structure. For example, we do not typically materialize an entire data cube, and some research showed how to use a fancy B+-tree like data structure for time interval based views.</li>
+<li>We can also maintain some extra auxiliary data to make a view self-maintainable or at least reduce the likelihood of needing to access a base table. For example, we can store the top $k&#8217; &gt; k$ entries to maintain a top $k$ query. There has also been research on using cost based optimization to choose the best auxiliary data and auxiliary views to maintain.</li>
+</ul></li>
+<li>Timing of Maintenance
+<ul>
+<li>The simplest way to maintain views is to do <strong>immediate view maintenance</strong>: transactions which update the base tables also update the views. This slows down transactions. Also, some care has to be taken to decide whether to compute the view updates using the base tables <em>before</em> applying the transaction or <em>after</em>.</li>
+<li>Alternatively, we can perform <strong>deferred view maintenance</strong> in which a view is updated only when queried, on a periodic time schedule, after a certain number of updates, etc. This allows us to batch updates which can be more efficient.</li>
+<li>The paper surveys a bunch of papers on deferred view maintenance, but doesn&#8217;t describe anything in depth.</li>
+</ul></li>
+<li>Other Issues of View Maintenance
+<ul>
+<li>For single node materialized view maintenance, we have to be careful about concurrency control. For example, multiple transactions updating rows which affect the same row in an aggregate view have to be careful not to deadlock with one another. The paper surveys some fancy concurrency control schems, but doesn&#8217;t discuss any in depth.</li>
+<li>The paper also mentions a bunch of different papers that implement distributed materialized views but doesn&#8217;t dive into any significant details.</li>
+</ul></li>
+<li>Background and Theory (Using Materialized Views)
+<ul>
+<li>Given a query $Q$ and a set of views, we want to answer three questions:</li>
+</ul>
+<ol type="1">
+<li>Is it possible to compute $Q$ using only the views?</li>
+<li>How many tuples of $Q$ can we output using only the views?</li>
+<li>If we have access to the views and to the base tables, what is the most efficient way to compute $Q$?</li>
 </ol>
 <ul>
-<li>For a particular candidate query, expand the views and test for equivalence or maximal containement</li>
-<li>Optimizer needs a view matching mechanism to know which views can be used for which queries</li>
-<li>Data integration
-<ul>
-<li>Warehouse ETL style or mediated style over remote data</li>
-<li>Local as-view (LAV) define local schemas as views over global schema and perform query rewrites to use views</li>
-<li>Global as-view (GAB) define global schema s view over local schemas and perform view expansion</li>
+<li>To answer questions 1 and 3, we need a query equivalence decision procedure. Given a query $Q$ and a view-rewrite $R$ of $Q$, we unravel the view definitions in $R$ to get a query $R^*$ and ask if $R^*$ and $Q$ are equivalent.</li>
+<li>To answer question 2, we do the same thing except that we ask if $R^*$ is maximally contained in $Q$.</li>
+<li>Both of these assume we have an $R$. Naively, we could guess and check an $R$ until we find one that works.</li>
+<li>This section of the paper is pretty light on information.</li>
 </ul></li>
-</ul></li>
-<li>Selecting views to materialize
+<li>Incorporation into Query Optimization
 <ul>
-<li>Define a performance metric (e.g. time for a given set of queries) and a resource limit (e.g. space for views or time for maintenace)</li>
-<li>OLAP cube queries: materialize a subset of the cube</li>
-<li>In general, the problem is very hard</li>
-<li>Need to limit the search space of views based on what the optimizer can handle and in general to make search feasible</li>
+<li>This section is <em>very</em> light. It just says that a query optimizer needs to have some way to select a set of views that can be used to evaluate a query and figure out how to use them, but it doesn&#8217;t say how it does that.</li>
 </ul></li>
-<li>Connections
+<li>Using Views for Data Integration
 <ul>
-<li>Data stream processing</li>
-<li>Approximate query processing</li>
-<li>Scalable continuous query processing (see which updates trigger which views/triggers)</li>
-<li>Caching</li>
-<li>Indexes</li>
-<li>Provenance (derivation counting is like provenance)</li>
+<li>Often times, we want to access data from multiple data sources using a single unified schema. Schema-mappings can be used for this. There are two approaches: an eager approach (a data <strong>warehouse</strong>) or a lazy approach (a <strong>mediator</strong>) in which queries against the view are translated to queries against the disparate data sources.</li>
+<li>There are two approaches to building a mediator. The <strong>global-as-view</strong> approach treats the global database as a view over the disparate data sources. Querying the global database is as simple as unraveling the view definitions.</li>
+<li>The <strong>local-as-view</strong> approach treats the data sources as views over the global database and rewrites queries against the global database to be queries against the &#8220;views&#8221;.</li>
+</ul></li>
+<li>Selecting Views to Materialize
+<ul>
+<li>Selecting views to materialize amounts to solving an optimization problem with a particular goal (e.g.&#160;minimize query costs for a certain query workload) with a certain set of constraints (e.g.&#160;the amount of space used to store the views, the view maintenance cost for a certain update workload).</li>
+<li>This section is light on details, but briefly describes that we can limit the search space of views for OLAP cubes over a single table or over a single set of joined tables in a star schema.</li>
+<li>Selecting views in the more general case is really hard. The paper discusses that the search space of views should be limited to only include views that the query optimizer understands how to use. The paper cites a bunch of stuff, but no details are provided.</li>
+</ul></li>
+<li>Connections to Other Problems
+<ul>
+<li><strong>Data Stream Processing</strong>: Processing data streams is very similar to maintaining a view where the streaming data is like a stream of relation updates and the streaming output is like a stream of the view updates. Stream processing systems maintain auxiliary information to maintain the streams which is similar to notions of self-maintainable views.</li>
+<li><strong>Approximate Query Processing</strong>: Recent research has considered approximate materialized views.</li>
+<li><strong>Scalable Continuous Query Processing</strong>: Triggers are like a materialized booleans that become true or false as the database changes. Topics like irrelevant updates can be used to throw away changes that won&#8217;t affect a trigger.</li>
+<li><strong>Caching</strong>: Both caches and views are auxiliary information used to speed up queries. We also have to worry about how to maintain a cache (invalidation), how to use a cache (pretty easy, just use it), and how to select what to cache (eviction policies).</li>
+<li><strong>Indexing</strong>: Indexes and views are both auxiliary information to speed up queries. Some ideas from deferred view maintenance have influenced deferred index maintenance.</li>
+<li><strong>Provenance</strong>: The auxiliary information used for stuff like derivation counting is essentially provenance.</li>
+</ul></li>
+<li>Questions
+<ul>
+<li>Q: Explain the relationship between indexes and materialized views.</li>
+<li>A: The paper claims that materialized views and indexes are intrinsically the same thing, but it&#8217;s a bit unclear why that is.</li>
 </ul></li>
 </ul>
