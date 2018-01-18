@@ -1,4 +1,10 @@
 # Implementing Data Cubes Efficiently
+- Overview
+    - _Note_: This paper describes how to decide what subset of a cube to
+      materialize given a set of constraints cube. The "On the Computation of
+      Multidimensional Aggregates" paper discusses how to efficiently
+      materialize an entire. They are different.
+
 - Lattices, roll-ups, and drill-downs
 - Product lattice Hasse diagram as a hypercube
 - Cost model of evaluating cuboid is the minimum cardinality of cuboid greater than it

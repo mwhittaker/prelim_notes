@@ -1815,27 +1815,139 @@ $$</code></pre></li>
 <li>A: The paper claims that materialized views and indexes are intrinsically the same thing, but it&#8217;s a bit unclear why that is.</li>
 </ul></li>
 </ul>
-<h1 id="on-the-computation-of-multidimensional-aggregates">On the Computation of Multidimensional Aggregates</h1>
+<h1 id="on-the-computation-of-multidimensional-aggregates"><a href="https://scholar.google.com/scholar?cluster=8624620981335983298">On the Computation of Multidimensional Aggregates</a></h1>
 <ul>
-<li>Cubes, cuboids, and base cuboid</li>
-<li>Homomorphic aggregation functions</li>
-<li>Three methods for computation
+<li>Overview
 <ul>
-<li>Independent: compute all cuboids from base cuboid</li>
-<li>Parent: iteratively compute every cuboid from its parent</li>
-<li>Overlap: perform parent method in parallel</li>
+<li><em>Note</em>: This paper describes how to efficiently materialize an entire cube. The &#8220;Implementing Data Cubes Efficiently&#8221; paper discusses how to decide what subset of a cube to materialize given a set of constraints. They are different.</li>
+<li>The query <code>CUBE Product, Year, Customer BY SUM(Sales)</code> calculates a group by query for every subset of {<code>Product</code>, <code>Year</code>, Customer`}.</li>
+<li>One of these group bys is called a <strong>cuboid</strong>. The group by with all attributes is called the base <strong>cuboid</strong>.</li>
 </ul></li>
-<li>Sorted run (matching l columns, l projected out)</li>
-<li>Partition (matching l-1 columns, l projected out)</li>
-<li>Choose parent with dropped attribute furthest right (e.g. R(A,C) wants R(A,C,D), instead of R(A,B,C))</li>
-<li>If partitions fit in memory, we can compute in one pass and pipeline</li>
-<li>Otherwise, we write sorted runs to disk and merge them later</li>
-<li>Allocating which cuboids to run at once is NP-complete; breadth-first search left-to-right heuristic</li>
-<li>Combine runs from later partitions into runs from earlier partitions</li>
-<li>Make right cuboids small and sort attributes in decreasing order of distinct values to minimize the number of sorted runs</li>
+<li>Options for Computing the CUBE
+<ul>
+<li>Note that the aggregate functions for the cube must be homomorphic (i.e. $F(X \cup Y) = F(X) \cup F(Y)$).</li>
+<li><strong>Multiple Independent Group-By Queries (Independent Method)</strong>: We compute and materialize the base cuboid and then compute all other cuboids using it. We can use a standard sort based or hash based group-by implementation.</li>
+<li><strong>Hierarchy of Group-By Queries (Parent Method)</strong>: We can compute a cuboid on attributes $X$ from a cuboid on attributes $Y \supset X$. In this method, we independently compute each cuboid using a parent cuboid.</li>
+<li><strong>Overlap Method</strong>: We use the parent method but concurrently compute multiple cuboids at once. This method is the focus of the paper.</li>
+</ul></li>
+<li>Overview of the Overlap Method
+<ul>
+<li>Consider the following cuboid (A, B, C) and assume we want to compute the cuboid (A, C). If memory permits, we will read in one <strong>partition</strong> of the cuboid into memory at a time, sort the cuboid, and then append it to disk. A <strong>partition</strong> is just a sequence of the cuboid that shares the same prefix up to but not including the dropped column in the child cuboid (i.e.&#160;B) with the dropped column dropped. Below, partitions are color coded.</li>
+<li>If a partition does not fit into memory, we can read in the partitions <strong>sorted run</strong> by sorted run. A sorted run is a subsequence of a partition that shares the same prefix up to and including the dropped column in the child cuboid (i.e.&#160;B) with the dropped column dropped. We write out each sorted run and then externally sort them to form a sorted partition. Below, sorted runs within a partition are separated with a thick black line.</li>
+</ul></li>
+</ul>
+<center>
+<table class="data_table">
+<thead>
+<tr>
+<th>
+A
+</th>
+<th>
+B
+</th>
+<th>
+C
+</th>
+</tr>
+</thead>
+<tbody>
+<tr style="background-color: rgba(255, 0, 0, 0.2);">
+<td>
+1
+</td>
+<td>
+1
+</td>
+<td>
+2
+</td>
+</tr>
+<tr style="background-color: rgba(255, 0, 0, 0.2); border-bottom: 2pt solid black;">
+<td>
+1
+</td>
+<td>
+1
+</td>
+<td>
+3
+</td>
+</tr>
+<tr style="background-color: rgba(255, 0, 0, 0.2);">
+<td>
+1
+</td>
+<td>
+2
+</td>
+<td>
+2
+</td>
+</tr>
+<tr style="background-color: rgba(0, 255, 0, 0.2); border-bottom: 2pt solid black;">
+<td>
+2
+</td>
+<td>
+1
+</td>
+<td>
+3
+</td>
+</tr>
+<tr style="background-color: rgba(0, 255, 0, 0.2);">
+<td>
+2
+</td>
+<td>
+3
+</td>
+<td>
+2
+</td>
+</tr>
+<tr style="background-color: rgba(0, 0, 255, 0.2);">
+<td>
+3
+</td>
+<td>
+3
+</td>
+<td>
+1
+</td>
+</tr>
+</tbody>
+</table>
+</center>
+<ul>
+<li>Choosing a Parent to Compute a Cuboid
+<ul>
+<li>To compute the cuboid (B, C), we prefer the parent (B, C, D) over (A, B,
+<ol start="3" type="A">
+<li>to minimize the partition size.</li>
+</ol></li>
+<li>Thus, we choose the parent whose dropped attribute is furthest to the right.</li>
+</ul></li>
+<li>Choosing a Set of Cuboids for Overlapped Computation
+<ul>
+<li>If a cuboid is evaluated partition-by-partition, then some of its children can be evaluated concurrently.</li>
+<li>Given a limited amount of memory, we need to choose which cuboids to evaluate in parallel. Finding an optimum schedule is NP-hard, but an eager approach walks breadth first left-to-right down the subset lattice.</li>
+</ul></li>
+<li>Some Important Issues
+<ul>
+<li><strong>Incorrect estimation</strong>: partition sizes may have been estimated incorrectly. At runtime,the memory allocated to each cuboid can be adjusted dynamically.</li>
+<li><strong>Limiting the number of sorted runs</strong>: to limit the number of sorted run files, we an append sorted runs from one partition onto sorted runs from previous partitions. We need only limit the number of distinct values of the parent&#8217;s dropped column.</li>
+<li><strong>Choosing an initial sort order</strong>: We want smaller cuboids to be on the right since they have bigger partitions. Or, we can put the attributes with the fewest number of distinct values on the right to limit the number of sorted runs.</li>
+</ul></li>
 </ul>
 <h1 id="implementing-data-cubes-efficiently">Implementing Data Cubes Efficiently</h1>
 <ul>
+<li>Overview
+<ul>
+<li><em>Note</em>: This paper describes how to decide what subset of a cube to materialize given a set of constraints cube. The &#8220;On the Computation of Multidimensional Aggregates&#8221; paper discusses how to efficiently materialize an entire. They are different.</li>
+</ul></li>
 <li>Lattices, roll-ups, and drill-downs</li>
 <li>Product lattice Hasse diagram as a hypercube</li>
 <li>Cost model of evaluating cuboid is the minimum cardinality of cuboid greater than it</li>

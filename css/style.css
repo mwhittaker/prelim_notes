@@ -92,6 +92,11 @@ table {
   border-collapse: collapse;
 }
 
+.data_table td, .data_table th {
+  padding: 5pt;
+  text-align: center;
+}
+
 td, th {
   padding: 2pt;
   border: 1.25pt solid gray;
