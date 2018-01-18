@@ -1,4 +1,4 @@
-# Informix Under Control: Online Query Processing
+# [Informix Under Control: Online Query Processing](https://scholar.google.com/scholar?cluster=1434575511619007556)
 - Overview
     - When you submit a SQL query to a traditional relational database, it runs
       for a while, you sit there waiting patiently, and then it spits out an

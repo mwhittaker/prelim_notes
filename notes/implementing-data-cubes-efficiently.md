@@ -1,4 +1,4 @@
-# Implementing Data Cubes Efficiently
+# [Implementing Data Cubes Efficiently](https://scholar.google.com/scholar?cluster=9112921129698038148)
 - Overview
     - _Note_: This paper describes how to decide what subset of a cube to
       materialize given a set of constraints cube. The "On the Computation of

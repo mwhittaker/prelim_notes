@@ -1,4 +1,4 @@
-# BlinkDB: Queries with Bounded Errors and Bounded Response Times on Very Large Data
+# [BlinkDB: Queries with Bounded Errors and Bounded Response Times on Very Large Data](https://scholar.google.com/scholar?cluster=4916926405792203059)
 - Existing approaches to approximation
     - Predictable queries => super legit sketching
     - Predictable query predicates => good sampling
