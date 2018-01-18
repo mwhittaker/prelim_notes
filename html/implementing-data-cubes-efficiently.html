@@ -17,13 +17,38 @@
 <ul>
 <li><em>Note</em>: This paper describes how to decide what subset of a cube to materialize given a set of constraints cube. The &#8220;On the Computation of Multidimensional Aggregates&#8221; paper discusses how to efficiently materialize an entire. They are different.</li>
 </ul></li>
-<li>Lattices, roll-ups, and drill-downs</li>
-<li>Product lattice Hasse diagram as a hypercube</li>
-<li>Cost model of evaluating cuboid is the minimum cardinality of cuboid greater than it</li>
-<li>Minimize running all cuboids subject to fixed number of views: Repeatedly choose cuboid which maximizes benefit</li>
-<li>Minimize running all weighted cuboids subject to fixed number of views: Repeatedly choose cuboid which maximizes weighted benefit</li>
-<li>Minimize running all weighted cuboids subject to fixed space: Repeatedly choose cuboid which maximizes weighted benefit / space of cuboid</li>
-<li>Benefit of greedy is at least 63% (1 - 1/e) of the optimal</li>
+<li>Lattice Framework
+<ul>
+<li>Sets of attributes naturally form a set lattice where, for example, $(A, B) \preceq (A, B, C)$.</li>
+<li>Moreover, individual attributes can be arranged in hierarchies. For example, $(none) \preceq (year) \preceq (month) \preceq (day)$.</li>
+<li>We can unify these two by considering a product lattice of each attributes lattice. When there are no hierarchies, this is a simple subset lattice.</li>
+</ul></li>
+<li>Cost Model
+<ul>
+<li>This paper assumes that all queries query are for an entire cuboid ( e.g.&#160;queries like <code>SELECT a, b, SUM(C) FROM R GROUP BY a, b</code> instead of <code>SELECT a, b, SUM(C) WHERE a 1 = 42 GROUP BY a, b</code>).</li>
+<li>Moreover, the cost of computing a query $Q$ using a parent cuboid $Q_P$ is the cardinality $|Q_P|$. This cost model is crude, but good enough.</li>
+<li>The sizes of cuboids can be estimated with sampling, or by sampling the number of unique values of each attributes and multiplying them together assuming independence.</li>
+</ul></li>
+<li>Optimizing Data-Cube Lattices
+<ul>
+<li>First, let&#8217;s make a couple of simplifying assumptions.
+<ol type="1">
+<li>Assume our workload queries each cuboid once.</li>
+<li>Assume that we can only choose a fixed number $k$ of the cuboids to materialize (as opposed to a fixed amount of memory).</li>
+</ol></li>
+<li>A greedy algorithm iteratively (for $k$ steps) picks the view which maximizes the difference in cost with and without the view. This difference in cost is computed as a sum of <strong>benefits</strong> for each cuboid.</li>
+<li>There is a theoretical bound limiting how bad the greedy algorithm can do. See proof in paper. There is also a theorem stating that no polynomial time algorithm can guarantee a better bound than the greedy algorithm.</li>
+<li>Addressing the assumptions:
+<ol type="1">
+<li>When computing the benefit, scale the benefit by the likelihood of a cuboid.</li>
+<li>Instead of using the total benefit of a view, use the total benefit per unit of size.</li>
+</ol></li>
+</ul></li>
+<li>The Hypercube Lattice
+<ul>
+<li>When attributes do not have any hierarchies, we get a hypercube lattice.</li>
+<li>The paper describes some analysis of how take advantage of the structure of a hypercube lattice to do better than the greedy algorithm, but the details are complicated, and I don&#8217;t understand them.</li>
+</ul></li>
 </ul>
   </div>
 

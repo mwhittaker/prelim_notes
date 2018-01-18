@@ -75,3 +75,7 @@
       right since they have bigger partitions. Or, we can put the attributes
       with the fewest number of distinct values on the right to limit the
       number of sorted runs.
+- Questions
+    - Q: Design a scheme using hashing to compute a child cuboid from a parent
+      cuboid.
+    - A: ???
