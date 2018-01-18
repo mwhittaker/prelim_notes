@@ -1,39 +1,69 @@
 <h1 id="blinkdb-queries-with-bounded-errors-and-bounded-response-times-on-very-large-data"><a href="https://scholar.google.com/scholar?cluster=4916926405792203059">BlinkDB: Queries with Bounded Errors and Bounded Response Times on Very Large Data</a></h1>
 <ul>
-<li>Existing approaches to approximation
+<li>Overview
 <ul>
-<li>Predictable queries =&gt; super legit sketching</li>
-<li>Predictable query predicates =&gt; good sampling</li>
-<li>Predictable query column sets =&gt; BlinkDB</li>
-<li>Unpredictable queries =&gt; online aggregation</li>
+<li>Given a query like <code>SELECT AVG(gpa) FROM enroll GROUP BY college, gender</code>, BlinkDB will sample <code>enroll</code> stratified on <code>college, gender</code> and use the sampled data to evaluate queries really fast.</li>
 </ul></li>
-<li>Built on HIVE</li>
-<li>SELECT-FROM-WHERE-GROUPBY-HAVING queries without joins or subqueries</li>
-<li>Confidence interval or latency as part of query</li>
-<li>Sampling
+<li>Background and Workload Taxonomy
 <ul>
-<li>Stratified sample n_max elements on query column sets</li>
-<li>Store groups contiguously in blocks</li>
-<li>Latency or accuracy determines n</li>
-<li>n scales inversely proportional to root K</li>
-<li>Choose appropriate cap K to get exactly n elements &lt; n_max</li>
+<li>There are four approaches to approximate query processing on a spectrum of performance and query flexibility.</li>
+</ul>
+<ol type="1">
+<li><strong>Predictable Queries</strong>: If we assume that we know <em>all</em> of the queries upfront, we can use special data structures and fancy sketching algorithms (e.g.&#160;wavelets) to answer the queries incredibly fast.</li>
+<li><strong>Predictable Query Predicates</strong>: =&gt; Here, we assume that we know the predicates used in queries, but don&#8217;t know the queries themselves. For example, we may know that 10% of queries involve a filter of the form <code>WHERE City = 'New York'</code>. Here, we can use materialized views.</li>
+<li><strong>Predictable Query Column Sets</strong>: =&gt; Here, we assume that we know the columns used in the predicates of future queries, but we don&#8217;t know the queries and we don&#8217;t know the values being used in the predicates. For example, we may know that 10% of queries involve a filter on <code>City</code>, but we don&#8217;t know what value is being filtered. This is the regime in which BlinkDB operates.</li>
+<li><strong>Unpredictable Queries</strong>: =&gt; If we don&#8217;t assume anything about queries, then we have to use something online aggregation. Online aggregation can degenerate into a full table scan if the groups we&#8217;re interested in are rare in the source data.</li>
+</ol></li>
+<li>System Overview
+<ul>
+<li>BlinkDB extends Shark with (1) an offline module for creating stratified samples and (2) a runtime module for selecting samples.</li>
+<li>BlinkDB only supports SELECT-FROM-WHERE-GROUPBY-HAVING queries without joins or subqueries.</li>
+<li>Queries are of the form <code>SELECT ... ERROR WITHIN 10% AT CONFIDENCE 95%</code> or <code>SELECT ... WITHIN 5 SECONDS</code>.</li>
 </ul></li>
-<li>Selecting samples
+<li>Sample Creation
 <ul>
-<li>Given a space constraint, choose all samples with same cap K</li>
-<li>Maximize product of probability of query, sparseness of query, and coverage</li>
-<li>Coverage is the likelihood that a grouping column values appears in a sample. For example, given the sample on (a, b, c), we know every unique value of (a, b) will show up. Given a sample on a, some values of (a, b) might show up, some might not</li>
-<li>If our sample isn&#8217;t a perfect cover, we can still perform approximate queries, but our answers might be really bad</li>
+<li>Consider the query <code>SELECT a, b, c, SUM(D) FROM R GROUP BY a, b, c;</code>. For each unique value of <code>(a, b, c)</code> (e.g. <code>(1, 1, 1)</code>), we create a simple random sample.</li>
+<li>The question is, how big of a sample should we make for each value of <code>(a, b, c)</code>? Given a maximum number of allowable rows $n$, we make each stratified simple random sample as big as possible so that the sum over all samples is less than or equal to $n$.</li>
+<li>The maximum allowable size of a stratum is $K$. The error in estimates increases inversely proportional to $\sqrt{K}$.</li>
+<li>We store each stratified sample contiguously in a set of blocks.</li>
+<li>The latency or accuracy specified by a query will ultimately determine $n$, and given a sample of size $n&#8217;$, we can generate samples of size $n \leq n&#8217;$.</li>
+</ul></li>
+<li>Selecting Samples
+<ul>
+<li>Given a workload of queries with QCS $q_j$, we have to select a set of QCS $\phi_i$ to sample under the contraint that the number of samples fits within our space budget.</li>
+<li><p>Given a query $j$, say the <strong>coverage</strong> $y_j$ is the maximum overlap of a sampled QCS that can be used to answer the query. For example consider a query with $q_j$ = (A, C). We look at all the QCS that can be used to answer or partially answer the query:</p>
+<pre><code>     ABCD
+     /  \
+  ABC    ACD
+     \  /
+      AC
+     /  \
+    A    C
+     \  /
+      {}</code></pre>
+If any of <code>ABCD</code>, <code>ABC</code>, or <code>ACD</code> are sampled, then we can answer queries for <code>AC</code> exactly. If <code>A</code> or <code>C</code> is sampled, we can use it to partially answer <code>AC</code> (aka answer <code>AC</code> with bad sampling).</li>
+<li>The sparseness of a QCS $\phi$ is simply the number of small groups.</li>
+<li>An optimization problem selects the set of QCS that maximizes the product of query probability, query coverage, and query sparseness for a workload set of queries. See papers for details.</li>
 </ul></li>
 <li>Runtime
 <ul>
-<li>Choose smallest superset, or if no such set exists, run on subsamples and choose the one with the highest selectivity</li>
-<li>Run on a tiny subsample to estimate selectivity and runtime and then use stats close forms to choose a right sized subsample</li>
-<li>Store sampling rate to do things like COUNT</li>
+<li>At runtime, given a query with QCS $q_j$, we have to select a materialized QCS to use and a size of a subsample of that QCS.</li>
+<li>If there is a $\phi_i \supseteq q_j$, we use that. Otherwise, we use the least selective (paper says most selective, but it&#8217;s definition of selective is opposite of the traditional definition) $\phi_i \subset q_j$.</li>
+<li>To determine what sample size to use (and maybe the QCS), we run the query on various subsample sizes to estimate the error and latency. We use the ELPs to choose the subsample size.</li>
+<li>BlinkDB also stores sampling rates to do things like COUNT and undo bias.</li>
 </ul></li>
 <li>Implementation
 <ul>
-<li>Compute uniform sample</li>
-<li>Periodically re-compute which samples to use</li>
+<li>BlinkDB is built on top of Hive with MapReduce and Spark/Shark as a backend.</li>
+<li>BlinkDB periodically refreshes samples and also periodically refreshes the set of QCS that chooses to sample.</li>
+</ul></li>
+<li>Questions
+<ul>
+<li>Q: What&#8217;s the difference between &#8220;predictable queries&#8221; and &#8220;predictable query predicates&#8221;?</li>
+<li>A: Predictable queries assume we know the actual queries whereas predicates query predicates only assumes we know the predicates being used, but not necessarily the queries they are being used in.</li>
+<li>Q: Why are the columns in the HAVING clause part of the query column sets (QCS)?</li>
+<li>A: ??? It makes sense to stratify based on the columns in the WHERE and GROUP BY, but the HAVING columns don&#8217;t seem like they should be stratified on.</li>
+<li>Q: How does BlinkDB choose a $\phi$ for a given query?</li>
+<li>A: ??? The paper says it uses selectivity, but is also says it uses ELPs, so it&#8217;s unclear what it&#8217;s doing.</li>
 </ul></li>
 </ul>
