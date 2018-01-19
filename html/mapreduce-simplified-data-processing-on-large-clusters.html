@@ -13,28 +13,39 @@
   <div id="container">
 <h1 id="mapreduce-simplified-data-processing-on-large-clusters">MapReduce: simplified data processing on large clusters</h1>
 <ul>
-<li>map: (k1, v1) -&gt; (k2, v2)</li>
-<li>reduce: (k2, v2 list) -&gt; v2 list</li>
+<li>Programming Model
+<ul>
+<li>Programmers write a map and reduce function of the following types. They also provide metadata like the input data locations, output data directory, parameters, etc.</li>
+<li>map: <code>(k1, v1) -&gt; (k2, v2)</code></li>
+<li>reduce: <code>(k2, v2 list) -&gt; v2 list</code></li>
+<li>Examples include word count, grep, sort, inverted index, etc.</li>
+</ul></li>
 <li>Implementation
 <ul>
-<li>Single master, multiple mappers, multiple reducers</li>
-<li>Split input and distribute to mappers</li>
-<li>Mapper writes locally and informs master of write location</li>
-<li>Reducers get location info from master and external sort data when ready</li>
-<li>Reducers run reduce and create a file for each output</li>
+<li>The execution of a MapReduce job goes as follows:
+<ol type="1">
+<li>The input data is divided into $M$ map tasks.</li>
+<li>The master assigns these map tasks to a pool of workers.</li>
+<li>A mapper runs the map function to build of a set of key-value pairs which are periodically written to one of $R$ files for $R$ different reduce tasks.</li>
+<li>Periodically, a mapper will send the location of the files to the master. The master relays this information to the reducers. A reducer directly reads the data from the mappers via RPC.</li>
+<li>A reducer sorts and processes its data by key, writing the result of the reduce to a file.</li>
+</ol></li>
+<li>The master stores the status of all workers as well as the locations of their files.</li>
+<li>Whenever a worker fails, detected by the master, it reassigns all work performed by the worker to another worker.</li>
+<li>Obviously, with deterministic operators, MapReduce runs deterministically. But even if the operators are nondeterministic, the output of a MapReduce is still equivalent to some serial execution.</li>
+<li>The master tries to run map tasks on the same machine on which the data is stored.</li>
+<li>The larger $M$ and $R$ are, the less susceptible a job is to workload skew, but the larger $M$ and $R$, the more data the master has to store. $R$ is kept small since it determines the number of output files that are produced.</li>
+<li>The master will launch redundant tasks near the end of execution to try and mitigate the effects of stragglers.</li>
 </ul></li>
-<li>Master stores status of each task and the position of the reducer data</li>
-<li>If a worker dies (determined via a heartbeat), then the master re-runs the job and informs reducers to re-read data</li>
-<li>More tasks means less skew but more memory pressure on the master</li>
-<li>Backup tasks for stragglers</li>
 <li>Refinements
 <ul>
-<li>Custom partition functions</li>
-<li>Combiner functions</li>
-<li>Skip records which cause failures</li>
-<li>Local execution for debugging</li>
-<li>Status info in HTML</li>
-<li>Counters</li>
+<li>Users can write custom partition functions for things like grouping URLs from the same domain or range partitioning the key space for distributed sorts.</li>
+<li>Users can specify combiner functions (typically the same as the reducer function) that are run by the mappers before they hand off their data to the reducers.</li>
+<li>MapReduce supports different types of inputs (e.g.&#160;text file, database) and outputs.</li>
+<li>If a certain record causes a mapper to crash repeatedly, the master can skip over the record.</li>
+<li>Users can execute MapReduce jobs locally to help debug them.</li>
+<li>The master runs an HTTP server which serves diagnostic information about the running MapReduce.</li>
+<li>Mappers and reducers can increment global counters which are aggregated by the master.</li>
 </ul></li>
 </ul>
   </div>
