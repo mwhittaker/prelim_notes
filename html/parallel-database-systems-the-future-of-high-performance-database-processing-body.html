@@ -1,19 +1,27 @@
 <h1 id="parallel-database-systems-the-future-of-high-performance-database-processing">Parallel Database Systems: The Future of High Performance Database Processing</h1>
 <ul>
-<li>Pipeline vs partition parallelism</li>
-<li>Speedup vs scaleup</li>
-<li>Overheads to perfect scalability
+<li>Overview
 <ul>
-<li>Startup</li>
-<li>Interference</li>
-<li>Skew</li>
+<li>This article gives a layman&#8217;s introduction to parallel (aka distributed) databases.</li>
 </ul></li>
-<li>Shared nothing, shared disk, shared nothing</li>
-<li>Limitations to pipeline parallelism in SQL
+<li>Parallelism Goals and Metrics: Speedup and Scaleup
 <ul>
-<li>Query plans not that deep</li>
-<li>Some operators (e.g. aggregates) cannot be pipelined</li>
-<li>Some operators take way longer than others</li>
+<li><strong>Speedup</strong> is the ability to perform a fixed task faster when given more machines. <strong>Scaleup</strong> is the ability to perform a bigger task as fast as before when given more machines.</li>
+<li>Scaleup can involve increasing the number of transactions per second or increasing the size of the database on which we run a query.</li>
+<li>Startup cost, interference (e.g.&#160;contention), and skew (e.g.&#160;stragglers) can all prevent perfect speedup and scaleup.</li>
 </ul></li>
-<li>Round robin, range, and hash partitioning</li>
+<li>Hardware Architecture, the Trend to Shared-Nothing Machines
+<ul>
+<li>Shared-nothing and shared-disk architectures cannot scale beyond a handful of nodes. Shared nothing scales better and doesn&#8217;t require any fancy hardware.</li>
+</ul></li>
+<li>A Parallel Dataflow Approach to SQL Software
+<ul>
+<li>There are two kinds of parallelism available to a distributed database: <strong>pipeline parallelism</strong> (different operators running concurrently in a pipeline) and <strong>partition parallelism</strong> (multiple of the same operator running concurrently on a partitioned data source). The advantages of pipeline parallelism are limited by the fact that query plans are not that deep, some operators are blocking (e.g.&#160;sort merge join), and some operators are much less expensive than others.</li>
+<li>Data can be round-robin, range, or hash partitioned. Round-robin is not susceptible to data skew, but cannot be used for key lookups or range scans. Hash partitioning is only a little bit affected by data skew, but cannot be used for range scans. Range partitioning is susceptible to data skew but can be used for key lookups and range scans.</li>
+<li>Distributed implementations of things like hash join and sort merge join exist.</li>
+</ul></li>
+<li>The State of the Art
+<ul>
+<li>Distributed databases include Teradata, Tandem NonStop SQL, Gamma, Super Database Computer, and Bubba.</li>
+</ul></li>
 </ul>
