@@ -13,38 +13,60 @@
   <div id="container">
 <h1 id="tag-a-tiny-aggregation-service-for-ad-hoc-sensor-networks">TAG: A tiny aggregation service for ad-hoc sensor networks</h1>
 <ul>
-<li>Motes running tiny OS form tree with increasing number broadcast</li>
-<li>Periodic aggregate SQL queries</li>
-<li>Aggregates expressed as initializer, merger, and final evaluator</li>
-<li>Characterizing aggregates
+<li>Overview
 <ul>
-<li>Duplicate sensitivity</li>
-<li>Exemplary vs summary</li>
-<li>Increasing</li>
-<li>Amount of state
+<li>TAG organizes small little devices in an ad-hoc network into an aggregation tree to evaluate group-by queries every thirty seconds or so. By aggregating results and filtering out groups early, TAG can reduce the number of messages sent and the amount of energy used.</li>
+</ul></li>
+<li>Motes and Ad-Hoc Networks
 <ul>
-<li>Distributive: evaluator is identity</li>
-<li>Algebraic: intermediate state is same size as identity</li>
-<li>Holistic: proportional to input data size</li>
-<li>Unique: proprtional to number of unique inputs</li>
-<li>Context-senstive: proportional to statistical property</li>
+<li>Motes are super small battery-powered sensors running TinyOS. A mote consumes a lot of energy when it sends a message, so ideally motes would send as few messages as possible.</li>
+<li>Both broadcast and point-to-point messages are implemented as broadcasts; point-to-point messages are just ignored by everyone except the intended recipient.</li>
+<li>Motes arrange themselves in an aggregation tree by propagating messages containing the depth to the root. They use this tree to exchange messages to and from the root.</li>
+</ul></li>
+<li>Query Model and Environment
+<ul>
+<li>TAG supports queries of the form <code>SELECT room, AVG(noise) FROM sensor WHERE floor == 6 HAVING AVG(noise) &gt; 30 EPOCH DURATION 1s</code>.</li>
+<li>Aggregates (e.g. <code>AVG</code>) are implemented as an initializer function (e.g. $i(x) = (x, 1)$), a merge function (e.g. $f((x_1, y_1), (x_2, y_2)) = (x_1 + x_2, y_1 + y_2)$) and an evaluator function (e.g. $e((x, y)) = x/y$).</li>
+<li>We can taxonomize aggregates as follows:
+<ul>
+<li><strong>Duplicate Sensitive</strong>: Things like COUNT are duplicat sensitive; things like SUM are not.</li>
+<li><strong>Exemplary vs Summary</strong>: Things like MAX are exemplary; things like SUM are not.</li>
+<li><strong>Monotonic</strong>: Things like COUNT are &#8220;monotonic&#8221;; things like AVG are not.</li>
+<li><strong>Partial State</strong>:
+<ul>
+<li><strong>Distributive</strong>: the partial state is the same as the final aggregate.</li>
+<li><strong>Algebraic</strong>: the partial state is of constant size.</li>
+<li><strong>Holisitic</strong>: the size of the partial state is proportional to the number of records in a group.</li>
+<li><strong>Unique</strong>: the size of the partial state is proportional to the number of <em>distinct</em> records in a group.</li>
+<li><strong>Context-Sensitive</strong>: the size of the partial state is proportional to some property of the data (e.g.&#160;number of entries, max - min value, etc).</li>
 </ul></li>
 </ul></li>
-<li>Motes have catalog of attributes, returning NULL if queries for unknown attribute</li>
-<li>Reduce aggregates upwards</li>
-<li>Build table of groups, evicting if need be</li>
-<li>Prune increasing having queries early</li>
-<li>Send downwards with deadlines</li>
+<li>The central query processor caches the set of attributes which can be queried.</li>
+</ul></li>
+<li>In-Network Aggregates
+<ul>
+<li>Every epoch, a query request is propagated down the tree. To reduce the total number of messages, a node needs to hear back from every child before it forwards its aggregate. To do so, it sets a deadline to hear back from all of its children. These deadlines are taken to be the EPOCH / depth of the tree.</li>
+<li>You could pipeline the messages to improve sampling rate, but the paper leaves that for future work.</li>
+<li>Grouping is straightforward with the caveats that some monotonic HAVING filters can be applied early and that motes might have to prematurely evict its groups if it runs out of space.</li>
+</ul></li>
+<li>Additional Advantages of TAG
+<ul>
+<li>See section on loss below.</li>
+<li>Fewer messages are sent using TAG than in a centralized approach (though, this seems more like the principal advantage than an additional advantage).</li>
+<li>The paper says another advantage of epochs is more idle time, though this idle time would also exist in a centralized approach with epochs?</li>
+</ul></li>
 <li>Optimizations
 <ul>
-<li>Snoop broadcast data and prune results early (e.g. hear about a bigger max)</li>
-<li>Create data at top that can be pushed down to filter results (hypothesis testing)</li>
+<li>All messages in the ad-hoc network are broadcast. We can take advantage of this fact by allowing motes to snoop the traffic of other motes. For example, for a MAX query, a note does not need to propogate its value if it is less than one it snooped.</li>
+<li>We can generalize this approach of filtering out aggregates early using <strong>hypothesis testing</strong> for exemplary monotonic queries. Nodes higher in the tree send down values that lower nodes can use to filter themselves.</li>
+<li>You can also use hypothesis testing to do some clever filtering for averages using confidence intervals.</li>
 </ul></li>
-<li>Nodes get new parent with best link quality when parent dies</li>
-<li>2 optimizations for fault tolerance
+<li>Improving Tolerance to Loss
 <ul>
-<li>Cache children values and re-send old ones</li>
-<li>Split aggregate in two and send to two parents (e.g. COUNT/2)</li>
+<li>Periodically, a node will select a new parent with the highest connectivity, so long as it picks a node higher in the aggregation tree (to avoid cycles).</li>
+<li>When a node loses contact with its parent, it selects a new parent and drops its children.</li>
+<li>Intermediate nodes can cache the values of their children and relay them if their children have failed. Though, this uses up RAM that could otherwise be used for the grouping cache.</li>
+<li>For duplicate insensitive algorithms, motes can broadcast their values to all parents. For things like SUM, a mote can send half of its value to two of its parents.</li>
 </ul></li>
 </ul>
   </div>
