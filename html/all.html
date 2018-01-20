@@ -1285,29 +1285,55 @@ Paxos Group 3 (coordinator)
 </ul>
 <h1 id="transaction-management-in-the-r-distributed-database-management-system">Transaction Management in the R* Distributed Database Management System</h1>
 <ul>
-<li>What's the point of 2PC
+<li>Desirable Characteristics of Atomic Commit
 <ul>
-<li>Imagine coordinator sends commit to everyone; one node commits, the other crashes and loses all of its data because it didn't force write anything</li>
-</ul></li>
+<li>When comparing different atomic commitment algorithms, it helps to have a common set of desiderata with which to compare them:</li>
+</ul>
+<ol type="1">
+<li>Guaranteed transaction atomicity always</li>
+<li>Ability to &#8220;forget&#8221; outcome of commit processing after a short amount of time,</li>
+<li>Minimal overhead in terms of log writes and message traffic,</li>
+<li>Optimized performance in the no-failure case,</li>
+<li>Exploitation of completely or partially read-only transactions, and</li>
+<li>maximizing the ability to perform unilateral aborts.</li>
+</ol></li>
 <li>Vanilla 2PC
 <ul>
-<li>coordinator force-write commits and aborts</li>
-<li>Subordinate force-writes prepares, commits, and aborts</li>
+<li>See https://mwhittaker.github.io/papers/html/mohan1986transaction.html.</li>
 </ul></li>
-<li>Hierarchical 2PC</li>
-<li>2PC with presumed abort
+<li>Hierarchical 2PC
 <ul>
-<li>The second we know it's an abort, forget about the transaction</li>
-<li>Coordinate force-writes commits</li>
-<li>Subordinate force-write prepare and commit</li>
-<li>Only commits are acked</li>
+<li>Nodes arrange themselves in a tree. The root acts as a coordinator, the leaves act as subordinates, and the intermediate nodes act as both.</li>
+<li>When an intermediate node receives a prepare message, it propagates it downwards. It receives votes from its children and settles on a yes vote if all children vote yes and a no vote if any child votes no. It propagates this vote upwards, sending down aborts in the event of a no vote.</li>
+<li>When receiving an abort or commit from the coordinator, an intermediate node force-writes the decision, acks its parent, and propagates the decision to its children.</li>
 </ul></li>
-<li>2PC with presumed commit
+<li>2PC with Presumed Abort
 <ul>
-<li>Coordinate force-writes collecting and commit</li>
-<li>Subordinate force writes prepare and abort</li>
-<li>Aborts must be acked</li>
-<li>Coordinator crash between collecting and commit, assume abort</li>
+<li>See https://mwhittaker.github.io/papers/html/mohan1986transaction.html.</li>
+<li>If a subordinate only performed reads, it can log nothing, and vote READ.</li>
+<li>If a coordinator receives all READ votes, it can log nothing.</li>
+</ul></li>
+<li>2PC with Presumed Commit
+<ul>
+<li><strong>Main idea</strong>: Commits are more likely than aborts (hopefully), so don&#8217;t require that commits be acked. Also don&#8217;t force subordinates to force write commits.</li>
+<li>Invariant: If a coordinator doesn&#8217;t know about a transaction, then it assumes that it is a commit.</li>
+<li>Corollary: The coordinator must force write a prepare message. Otherwise, if it fails after sending prepare but before collecting votes, it would erroneously assume a commit.</li>
+<li>See https://mwhittaker.github.io/papers/html/mohan1986transaction.html.</li>
+</ul></li>
+<li>Miscellaneous
+<ul>
+<li>If a node in the prepared state cannot reach the master, it can ask its peers about the status of a transaction.</li>
+</ul></li>
+<li>Deadlock Detection
+<ul>
+<li>If a node detects a deadlock (after getting some waits-for information from another node), it aborts the local transaction.</li>
+</ul></li>
+<li>Questions
+<ul>
+<li>Q: What is bad with the following 1 phase commit protocol? When the master is ready to initiate a commit, it sends the number of suboordinates participating in the transaction to every suboordinate. They independently decide whether to commit or abort and send their decision to all other nodes. When all nodes have heard from all nodes, they decide to commit (if everyone voted to commit) or abort (if anyone voted to abort).</li>
+<li>A: This protocol stalls in the event that any of the suboordinates fail after the 1PC is initiated. If any of the suboordinates fails, then the other suboordinates will not receive all the votes and will be stuck forever. In 2PC, only a master failure will cause all nodes to be stuck indefinitely. If a suboordinates fails or is partitioned from the master, the master will eventually just decide to abort. In other words, it doesn&#8217;t satisfy desiderata 6 from above.</li>
+<li>Q: Okay, but what if each of the suboordinates is running Paxos and never fails?</li>
+<li>A: The suboordinate Paxos group could still be partitioned from the network.</li>
 </ul></li>
 </ul>
 <h1 id="generalized-isolation-level-definitions">Generalized Isolation Level Definitions</h1>
