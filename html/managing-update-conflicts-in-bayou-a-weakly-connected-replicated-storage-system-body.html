@@ -1,18 +1,42 @@
 <h1 id="managing-update-conflicts-in-bayou-a-weakly-connected-replicated-storage-system">Managing update conflicts in Bayou, a weakly connected replicated storage system</h1>
 <ul>
-<li><p>tl;dr This paper has two novelties: (1) bundle individual writes with dependency checks and merge procedures to let users define what a conflict is and how to (try to) resolve it and (2) eventual consistency via gossiping a totally ordered log in which operations are undone/redone and eventually committed by a single master.</p></li>
-<li>Eventually consistent gossip with user-defined write conflict resolution</li>
-<li>Meeting room example</li>
-<li>Dependency check SQL query + expected results</li>
-<li>Merge procedure rewrites query or logs errors on failure</li>
-<li>Writes timestamped and gossiped and executed in order immediately (might have to undo writes)</li>
-<li>Committed writes ordered before tentative writes</li>
-<li>Could commit once timestamp is greater than low watermark for all servers</li>
-<li>Bayou uses single master to decide commit</li>
-<li>Storage system
+<li>tl;dr This paper has two novelties: (1) bundle individual writes with dependency checks and merge procedures to let users define what a conflict is and how to (try to) resolve it and (2) eventual consistency via gossiping a totally ordered log in which operations are undone/redone and eventually committed by a single master.</li>
+<li>Example Applications
 <ul>
-<li>Write log of committed and tentative writes with garbage collection and care not to reintroduce write via old gossip</li>
-<li>Tuple store with bits for tentative or committed</li>
-<li>Undo log to undo stuff</li>
+<li>The paper presents two example applications. The first is a calendar reservation system like Google calendar.</li>
+<li>The second is a bibliography management system kind of like Mendeley.</li>
+</ul></li>
+<li>Bayou&#8217;s Basic System Model
+<ul>
+<li>Reads and writes are sent to various servers which totally order their writes in a log.</li>
+<li>Periodically, the servers gossip logs with one another.</li>
+<li>Bayou supports user-defined conflict detection and resolution.</li>
+</ul></li>
+<li>Conflict Detection and Resolution
+<ul>
+<li>What constitutes a conflict and how to go about resolving them is an application-specific thing. For example, two entries inserted into the calendar app conflict if they share the same room and overlap in time, while two records assigning different bibliography keys to the same paper is a conflict for the bibliography management system.</li>
+<li>Every write is bundled with a <strong>dependency check</strong> and a <strong>merge procedure</strong>.</li>
+<li>A dependency check is a SQL query over the database and an accompanying expected result. If evaluating the dependency check evaluates to the expected result, then the write is applied. Otherwise, the merge procedure is run. For example, a dependency check might detect that a room has been booked already.</li>
+<li>The merge procedure is a snippet of code that tries to reconcile the detected conflict. For example, a merge procedure might try to book alternative times for a meeting.</li>
+</ul></li>
+<li>Replica Consistency, Write Stability, and Commitment
+<ul>
+<li>Servers tag writes with logical clocks and unique node identifiers.</li>
+<li>All writes are globally ordered, stable writes before tentative writes.</li>
+<li>Bayou provides and API for clients to know when a write is stable.</li>
+<li>A single master is responsible for committing writes (though a low watermark could have also been used).</li>
+</ul></li>
+<li>Storage System Implementation Issues
+<ul>
+<li>write log, tuple store, undo log</li>
+<li>Bayou servers maintain a <strong>write log</strong> which consists of all the stable and tentative writes ever received. They can garbage collect stable writes so long as they maintain a low watermark from every server to make sure they don&#8217;t apply garbage collected writes again.</li>
+<li>The <strong>tuple store</strong> is an in-memory relational database. Each tuple is tagged with information about whether it is stable or tentative.</li>
+<li>There is an <strong>undo log</strong> which is used for rollback, but it is not really described in detail.</li>
+<li>There are version vectors used to make gossip more efficient, but they are not really described in detail.</li>
+<li>Bayou checkpoints periodically.</li>
+</ul></li>
+<li>Access Control
+<ul>
+<li>Bayou uses public key cryptography to handle issues of security.</li>
 </ul></li>
 </ul>
