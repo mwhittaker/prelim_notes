@@ -13,6 +13,7 @@
   <div id="container">
 <h1 id="managing-update-conflicts-in-bayou-a-weakly-connected-replicated-storage-system">Managing update conflicts in Bayou, a weakly connected replicated storage system</h1>
 <ul>
+<li><p>tl;dr This paper has two novelties: (1) bundle individual writes with dependency checks and merge procedures to let users define what a conflict is and how to (try to) resolve it and (2) eventual consistency via gossiping a totally ordered log in which operations are undone/redone and eventually committed by a single master.</p></li>
 <li>Eventually consistent gossip with user-defined write conflict resolution</li>
 <li>Meeting room example</li>
 <li>Dependency check SQL query + expected results</li>
