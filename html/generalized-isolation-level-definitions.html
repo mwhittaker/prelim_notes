@@ -13,6 +13,14 @@
   <div id="container">
 <h1 id="generalized-isolation-level-definitions">Generalized Isolation Level Definitions</h1>
 <ul>
+<li>tl;dr This paper has two contributions: (1) defining isolation levels in terms of dependency graphs and (2) beefing up the database model to handle versions.</li>
+<li>Overview:
+<ul>
+<li>Gray: English definitions that were too aggressive.</li>
+<li>ANSI: English definitions that were too permissive (e.g. $W_1(X), R_2(X), R_2(Y), W_2(Y), C_1, C_2$ allowed).</li>
+<li>Berenson: Semi-formal definitions that were too aggressive (e.g. $W_1(X), W_2(X), C_1, C_2$ disallowed). These definitions pretty muched forced you to do locking.</li>
+<li>Adya: Formal definitions that are just right (and include versions).</li>
+</ul></li>
 <li>Degrees of consistency
 <ul>
 <li>English definitions</li>
@@ -37,27 +45,34 @@
 <li>RR: No P0, P1, P2</li>
 <li>Serializable: No P0, P1, P2, P3</li>
 </ul></li>
-<li>Adya
+<li>Database Model
 <ul>
-<li>No multi-versioning</li>
-<li>Prevents some schedules which are conflict serializable</li>
-<li>DB model
+<li>In Adya&#8217;s database model, all objects are versioned. Reads and writes are partially ordered with the (obvious) restrictions that
 <ul>
-<li>Read and write multiple versions</li>
-<li>Predicates return version set</li>
+<li>a transaction&#8217;s reads and writes are ordered,</li>
+<li>a read of a value is ordered after the write,</li>
+<li>a transaction must read its own writes.</li>
+</ul></li>
+<li>There is a separate total order of object versions that is independent of the order of events in the partial order of events (think of how with MVCC/TO, the order in which writes is serialized isn&#8217;t directly related to the order in which the writes occur).</li>
+<li>Predicate reads return a set of versions for each object being read. Reading and writing these versions happens in subsequent, separate read and write operations.</li>
 </ul></li>
 <li>Dependency graphs
 <ul>
-<li>Read dependencies (wr) read version of someone else or read a predicate which was changed by someone else</li>
-<li>Write dependencies (ww) wrote next version</li>
-<li>Anti-dependency (rw) install next version or change predicate of something read by previous predicate</li>
+<li><strong>Write dependencies (ww)</strong> $T_j$ ww depends on $T_i$ if $T_j$ writes $x_j$ and $x_j$ immediately follows $x_i$ written by $T_i$.</li>
+<li><strong>Read dependencies (wr)</strong> $T_j$ wr depends on $T_i$ if $T_j$ reads $x_i$ (written by $T_i$) or if $T_j$ performs a predicate read of a version that most recently changed by $T_i$.</li>
+<li><strong>Anti-dependency (rw)</strong> $T_j$ rw depends on $T_i$ if $T_j$ writes $x_j$ which is the version immediately following the one read by $T_i$ or if $T_i$ performs a predicate read of a version that $T_j$ is later the first to change.</li>
+<li>Dependency graphs do <em>not</em> include aborted transactions.</li>
 </ul></li>
-<li>G0: write cycle</li>
-<li>G1: read-write cycles, aborted reads, intermediate reads</li>
-<li>G2: any cycle</li>
-<li>Pl-1 (RU): no G0</li>
-<li>Pl-2 (RC): no G0/G1</li>
-<li>Pl-3 (S): no G0/G1/G2</li>
+<li>Generalized Isolation Specifications
+<ul>
+<li>G0: No cycles consisting of only ww edges.</li>
+<li>G1: No cycles consisting of only wr and ww edges, no reading data from aborted transactions, and no reading the intermediate values of transactions.</li>
+<li>G2-item: No cycles consisting of only wr, ww, and rw-item edges.</li>
+<li>G2: No cycles of any kind.</li>
+<li>PL-1 (RU): Dissalows G0.</li>
+<li>PL-2 (RC): Dissalows G1.</li>
+<li>PL-2.99 (RR): Dissalows G1, G2-item.</li>
+<li>PL-3(S): Dissalows G1, G2.</li>
 </ul></li>
 </ul>
   </div>
