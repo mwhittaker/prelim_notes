@@ -1,42 +1,54 @@
-<h1 id="dynamo-amazons-highly-available-key-value-store">Dynamo: Amazon's highly available key-value store</h1>
+<h1 id="dynamo-amazons-highly-available-key-value-store">Dynamo: Amazon&#8217;s Highly Available Key-value Store</h1>
 <ul>
-<li>Availability over performance</li>
-<li>System interface
+<li>Overview
 <ul>
-<li>Key-value store with blob values</li>
-<li>get(key) -&gt; (value list, context)</li>
-<li>put(key, context, value)</li>
+<li>Amazon prefers availability over consistency, so they built Dynamo: a highly available and always writable key-value store that&#8217;s like a zero hop version of Chord with vector clock versioned values and tunable N, R, W parameters to make Dynamo meet an SLA.</li>
+</ul></li>
+<li>System Interface
+<ul>
+<li>Dynamo is a key-value store with unique keys and blob-valued values.</li>
+<li>All operations are on a single key, and Dynamo doesn&#8217;t offer any form of transactions or any sort of isolation.</li>
+<li>Dynamos has a <code>get(key) -&gt; (value list, context)</code> and <code>put(key, context, value)</code> API. The <code>context</code> argument is described in more detail below.</li>
 </ul></li>
 <li>Partitioning
 <ul>
-<li>Consistent partitioning with virtual nodes</li>
+<li>Dynamo uses consistent hashing and virtual nodes ala Chord. Each node is assigned some number of <strong>virtual nodes</strong> (i.e.&#160;spots in a circular 128-bit key space) and is assigned all data between it and its predecessor going counterclockwise.</li>
+<li>The number of virtual nodes that a physical node is assigned can be varies based on the capacity of the physical node.</li>
 </ul></li>
 <li>Replication
 <ul>
-<li>Replicate to (at most) N neighboring (non-virtual) nodes in the ring</li>
+<li>When data is sent to a coordinator, it replicates the data to N clockwise (non-virtual) neighbors in the ring.</li>
+<li>The list of nodes responsible for a given key range is called a <strong>preference list</strong>. Preference lists actually contain more than N entries in case some of the nodes in the preference list fail. Every node knows every preference list of every key range.</li>
 </ul></li>
-<li>Data versioning
+<li>Data Versioning
 <ul>
-<li>Every data item is annotated with a vector clock</li>
-<li>Writes and reads use W and R quorum style, so concurrent puts might conflict</li>
-<li>Users have to reconcile concurrent writes</li>
-<li>Shopping cart: concurrent delete and add, deleted item is re-inserted</li>
+<li>Dynamo versions key-value pairs with vector clocks.</li>
+<li>For example, imagine two servers a and b share the same versioned value of a key k, say {a:1, b:2}. If two concurrent updates are issued for k, one to a and one to b, then after some gossip, they will both have two versions: {a:2, b:1} and {a:1, b:2}. When a client issues a get for the key, all versions are returned. When a node reconciles the versions and writes the reconciled version back, a vector clock greater than all of the versions is used.</li>
+<li>Dynamo uses some hacky technique where if vector clocks get too big, the node who updated the item last is removed from the vector clock.</li>
 </ul></li>
-<li>Failures
+<li>Execution of get() and put() operations
 <ul>
-<li>Sloppy quorum: if node is not free, write to one outside the preference list</li>
+<li>A client issues a get or put to a load balancer than selects a node in the ring. If the node is in the preference list for the key, then it services the request. Otherwise, the request is forwarded to the first node in the preference list.</li>
+<li>When a node in the preference list receives a get request, it forwards the request to $R$ replicas in the preference list, including itself. When it has all the versions, it returns all concurrent versions to the user.</li>
+<li>When a node in the preference list receives a put request, it performs the write locally and then forwards the write to $W - 1$ other replicas in the preference list.</li>
 </ul></li>
-<li>Preventing divergence
+<li>Handling Failures: Hinted Handoff
 <ul>
-<li>Nodes use gossip and Merkel trees to ensure they don't diverge</li>
+<li>Remember that the preference list contains more than N entries even though the data is only replicated on N machines. If we go to do a write and less than W of the replicas are available, then we look for other non-replicas in the preference list. These nodes will eventually relay the writes back to the replicas. This technique is knows as a <strong>sloppy quorum</strong>.</li>
 </ul></li>
-<li>Membership
+<li>Handling Permanent Failures: Replica Synchronization
 <ul>
-<li>Administrator has to manually add nodes</li>
-<li>Gossip membership so everyone knows the ring assignments</li>
+<li>Writes only go to W of the replicas, but eventually have to make their way to all N of the replicas.</li>
+<li>Every replica maintains a Merkle tree for each of its key ranges. When two nodes gossip with one another, they compare Merkle trees to see where their data differs.</li>
+</ul></li>
+<li>Membership and Failure Detection
+<ul>
+<li>An administrator manually contacts an existing Dynamo node to add a new node into the system (helps avoid lots of churn for small transient outages). The new node gets key ring information from the node.</li>
+<li>All nodes maintain a history of nodes entering and leaving the system and information about the key ring assignments. This information is propagated between nodes using gossip.</li>
+<li>A node conservatively guesses that another node has failed if it doesn&#8217;t respond for a while. There is no global failure detection.</li>
 </ul></li>
 <li>Implementation:
 <ul>
-<li>Java SEDA implementation</li>
+<li>Dynamo is implemented in Java with pluggable storage systems and a SEDA-style implementation of the networking.</li>
 </ul></li>
 </ul>
