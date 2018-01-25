@@ -11,17 +11,23 @@
     <a href="../">Prelim Notes</a>
   </div>
   <div id="container">
-<h1 id="cap-twelve-years-later-how-the-rules-have-changed">CAP Twelve Years Later: How the &quot;Rules&quot; Have Changed</h1>
+<h1 id="cap-twelve-years-later-how-the-rules-have-changed">CAP Twelve Years Later: How the &#8220;Rules&#8221; Have Changed</h1>
 <ul>
-<li>CAP isn't hard and fast:
+<li>Novel Insights
 <ul>
-<li>When no partition, you can have it all</li>
-<li>CA has multiple granularities</li>
+<li>Nodes can detect partitions and act differently when partitioned. When a node tries to contact another node without avail, it has to wait a certain amount of time before giving up. This arbitrary amount of time is a &#8220;partition&#8221;.</li>
+<li>When in a partition, nodes can make a choice to violate availability or violate consistency. Nodes can decide to let some operations be avaible if they are easy to reconcile later and let others be consistent if they are hard to reconcile later.</li>
 </ul></li>
-<li>Partition as patience limit on communication loss</li>
-<li>Partition management: detect partition, enter special mode, recover later</li>
-<li>Make the easy to recover operations inconsistent</li>
-<li>Recover w/ user intervention, automatic like CRDTs, and sometimes compensations</li>
+<li>Why &#8220;2 of 3&#8221; is Misleading
+<ol type="1">
+<li>When there are no partitions, you can be consistent and available (though, this is starting to warp the definition of what these things mean).</li>
+<li>The CAP theorem can be applied at multiple granularities within a single system.</li>
+<li>C and A come in shades of gray; they are not hard and fast.</li>
+</ol></li>
+<li>Partition Recovery
+<ul>
+<li>After a partition is over, nodes have to bring their state back to a consistent state doing something like Bayou, Dynamo, or CRDTs.</li>
+</ul></li>
 </ul>
   </div>
 
