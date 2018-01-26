@@ -1,6 +1,9 @@
 # Improved Query Performance with Variant Indexes
 - tl;dr
-    - This paper surveys B+ tree indexes, bitmap indexes, projection indexes, and bit-sliced indexes and how to use them to evaluate single-column sums with a filter, ...
+    - This paper surveys B+ tree indexes, bitmap indexes, projection indexes,
+      and bit-sliced indexes and how to use them to evaluate single-column
+      aggregates with a filter, selections with a range query, and cube-like
+      group bys.
 - Value-List Indexes
     - A Value-List index is just a B+ tree that maps a key to a set of RIDs.
     - If rids are of the form (page id, offset), then the rid lists in the
