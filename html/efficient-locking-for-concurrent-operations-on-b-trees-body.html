@@ -1,14 +1,58 @@
 <h1 id="efficient-locking-for-concurrent-operations-on-b-trees">Efficient Locking for Concurrent Operations on B-trees</h1>
 <ul>
-<li>Example problem of B+ tree search without locks</li>
-<li>B-link tree high keys and sibling pointers</li>
-<li>Search algorithm: rightward walk without locks</li>
-<li>Insertion algorithm:
+<li>overview:
 <ul>
-<li>Search down without locks and remember stack</li>
-<li>Crab rightwards for leaf</li>
-<li>Walk up stack and crab rightwards</li>
-<li>At most 3 locks at any given point in time</li>
+<li>benefits: no read locks and constant number (3) of write locks</li>
 </ul></li>
-<li>Deletion: let tree underflow</li>
+<li>Storage Model
+<ul>
+<li><p>Threads can perform a <code>lock(x)</code>, <code>unlock(x)</code>, <code>A &lt;- get(x)</code> and <code>put(A, x)</code> operations. For example, to update a page, a thread would execute the following:</p>
+<pre><code>lock(x)
+A &lt;- get(x)
+modify data in A
+put(A, x)
+unlock(x)</code></pre></li>
+<li>Note that <code>get</code> and <code>put</code> operations are atomic.</li>
+</ul></li>
+<li>The Problem of Naive Concurrency
+<ul>
+<li>See https://mwhittaker.github.io/papers/html/lehman1981efficient.html for an illustration of what can go wrong if multiple threads are concurrently working on a B+ tree.</li>
+</ul></li>
+<li>Alternative Locking Schemes ala Cow Book
+<ol type="1">
+<li>Searches crab down the tree with shared locks. Inserts walk down the tree with exclusive locks. If a child is locked and is not full, we can release the lock on the parent.</li>
+<li>Searches crab down the tree with shared locks. Inserts walk down the tree with shared locks. If a child is locked and is not full, we can release the lock on the parent. When we hit the leaf, we acquire an exclusive lock and upgrade our previous shared locks to exclusive locks when necessary.</li>
+</ol></li>
+<li>B-link Tree
+<ul>
+<li>A B-link tree is a B+ tree with two modifications:</li>
+</ul>
+<ol type="1">
+<li>Each internal node has a <strong>high key</strong>. For example, the internal node (1, 10, 20, 30) has 4 pointers to regions in the range (-infinity, 1], [1, 10), [10, 20), and [20, 30).</li>
+<li>Each internal node has a pointer to its right sibling.</li>
+</ol></li>
+<li>The Search Algorithm
+<ul>
+<li>We start at the root and walk downwards and rightwards through the tree. At an internal node we walk rightward if our search key exceeds the high key in the node.</li>
+<li>No locks are held throughout this process.</li>
+</ul></li>
+<li>The Insertion Algorithm
+<ul>
+<li>We start at the root and walk downwards and rightwards through the tree just as we did for search. When we hit a leaf, we lock it and then crab locks rightward until we hit the correct leaf. The leaf we hit may not be the right leaf because after we get a pointer to the leaf but before we lock it, someone else could have come in and messed things up.</li>
+<li>As we walk downwards through the tree, we also remember the rightmost internal node we visited at each level.</li>
+<li>After we hit the right leaf, we get a lock on the rightmost node in the level above. This node might not be the right node. We crab rightward with locks until we hit the right internal node. After we find the right node, we unlock the node below us.</li>
+<li>This scheme holds at most 3 locks at a time.</li>
+</ul></li>
+<li>Deadlock Freedom
+<ul>
+<li>We can totally order nodes bottom to top and then left to right. Threads acquire locks in this total order so there cannot be any deadlocks.</li>
+</ul></li>
+<li>Livelock
+<ul>
+<li>It is possible that a search can indefinitely walk rightward in a B-link tree because other operations continuously make new nodes.</li>
+</ul></li>
+<li>Deletion
+<ul>
+<li>Deletion can just let the leaf underflow.</li>
+</ul></li>
 </ul>
