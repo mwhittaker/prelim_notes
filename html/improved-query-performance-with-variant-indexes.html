@@ -13,38 +13,106 @@
   <div id="container">
 <h1 id="improved-query-performance-with-variant-indexes">Improved Query Performance with Variant Indexes</h1>
 <ul>
-<li>Value-List indexes
+<li>tl;dr
 <ul>
-<li>B+ tree index with RID list or bitmap at leaves</li>
-<li>If there are a small number of keys, then the bitmap uses less space</li>
+<li>This paper surveys B+ tree indexes, bitmap indexes, projection indexes, and bit-sliced indexes and how to use them to evaluate single-column sums with a filter, &#8230;</li>
 </ul></li>
-<li>Projection indexes
+<li>Value-List Indexes
 <ul>
-<li>A column of a table stored contiguously (like columnar storage)</li>
+<li>A Value-List index is just a B+ tree that maps a key to a set of RIDs.</li>
+<li>If rids are of the form (page id, offset), then the rid lists in the leaves of a B+ tree can be grouped by page id. The rids within a page&#8217;s group do not need to repeat the page id. This saves space.</li>
 </ul></li>
-<li>Bit-Sliced indexes
+<li>Bitmap Indexes
 <ul>
-<li>Values viewed as list of bits and stored column-by-column</li>
+<li>A Bitmap index is a B+ tree that maps a key to a bitmap.</li>
+<li>If RIDs are 4 bytes = 32 bits each, then the size of the leaf-level of a B+ tree is roughly $32n$ where $n$ is the number of rows. The leaf-level of a bitmap index is roughly $nk$ bits where $k$ is the number of columns. If $k &lt; 32$, then the bitmap index uses less space.</li>
+<li>If $k$ is big, we can compress the bitmaps, but a compressed bitmap is essentially an RID list, so we end up back with a value-list index.</li>
+<li>The paper claims that bitmap operations are faster than RID set operations so long as $k &lt; 100$ (i.e.&#160;the bitmaps are at least 1% full).</li>
+<li>As an example imagine a relation <code>R(K10, K25)</code> and a query</li>
+</ul>
+<pre><code>SELECT K10, K25, COUNT(*)
+FROM R
+GROUP BY K10, K25</code></pre>
+<ul>
+<li>It&#8217;s faster to iterate over all 250 pairs of bitmaps and perform the AND and COUNT than it is to perform a standard sort-based group by.</li>
+<li>If a bitmap is segmented and it is known ahead of time that some segments contain all 0s or all 1s or something like that, they can be processed more efficiently.</li>
 </ul></li>
-<li>SELECT SUM(c) FROM R WHERE p
+<li>Projection Indexes
 <ul>
-<li>Assume bitmap fp</li>
-<li>No index: full table scan, filtering out using fp</li>
-<li>Value-List bitmap index: for each k, compute fk and then k * popcount(fk and fp)</li>
-<li>Bit-sliced index: for each i, 2^i * popcount(fp and ci).</li>
+<li>A projection index of a relation <code>R(a, b, c)</code> on column <code>a</code> is just the column <code>a</code> of <code>R</code> stored contiguously sorted in the same order as <code>R</code>. This is very much like projections in C-store except that the projections are not sorted on the columns.</li>
+<li>A query that only reads one column will read fewer bytes from the projection than from the whole relation. This is standard column store stuff.</li>
 </ul></li>
-<li>SELECT * FROM R WHERE c &gt; 100 and p
+<li>Bit-Sliced Indexes
 <ul>
-<li>Assume bitmap fp</li>
-<li>No index: full table scan</li>
-<li>Value-List bitmap: (OR of all bitmaps for c &gt; 10) AND fp</li>
-<li>Projection index: full column scan</li>
-<li>Bit-sliced index: intense bit tricks</li>
+<li>A bit sliced index over an integer-valued column views each integer as a bitstring. It then stores a bitmap per column. See https://mwhittaker.github.io/papers/html/o1997improved.html for an illustration.</li>
 </ul></li>
-<li>GROUP BY (A, B)
+<li>Comparing Index types for Aggregate Evaluation
 <ul>
-<li>Value-List index: for each fa for A and fb in B, compute (fa AND fb) and use it to compute the GROUP BY</li>
-<li>Projection index: Perform the GROUP BY like normal but only look at the relevant columns</li>
+<li>Single-Column SUM <code>SELECT SUM(a) FROM R WHERE &lt;predicate&gt;</code>
+<ul>
+<li>Here, we assume that we have a bitmap for the predicate.</li>
+<li><strong>No index</strong>: Use the bitmap to scan through the relation, computing the sum on the fly.</li>
+<li><strong>Projection index</strong>: Use the bitmap to scan through the relation, computing the sum on the fly.</li>
+<li><strong>Bitmap index</strong>: Iterate through the (key, bitmap) pairs computing the sum as key*count(bitmap AND predicate bitmap).</li>
+<li><strong>B+ tree index</strong>: Iterate through the (key, rid list) pairs computing the sum as key * count(rid list intersect predicate bitmap).</li>
+<li><strong>Bit-sliced index</strong>: Compute the sum as a sum of 2^i * count(ith column).</li>
+</ul></li>
+<li>Algorithms for COUNT, AVG, MAX, MIN, MEDIAN, and Column-Product (the SUM of products of two columns) are also briefly discussed.</li>
+</ul></li>
+<li>Evaluating Range Predicates
+<ul>
+<li><code>SELECT * FROM R WHERE c op k AND &lt;predicate&gt;</code></li>
+<li>As before, we assume that we have a bitmap for the predicate.</li>
+<li><strong>Projection index</strong>: Scan through the index using the predicate.</li>
+<li><strong>Bitmap index</strong>: Compute the OR of all bitmaps in the range and AND it with the predicate. Use this to retrieve the values.</li>
+<li><strong>B+ tree index</strong>: We compute the union of all rid sets and turn them into a bitmap, or turn each rid set into a bitmap and or them together.</li>
+<li><strong>Bit-sliced index</strong>: Crazy bit tricks.</li>
+</ul></li>
+<li>Evaluating OLAP-style Queries
+<ul>
+<li>Imagine we want to evaluate a join like</li>
+</ul>
+<pre><code>SELECT A.aa, B.bb, C.cc, SUM(F.f)
+FROM F, A, B, C
+WHERE F.a = A.a AND F.b = B.b AND F.c = C.c
+      A.x = 1 AND B.x = 2 AND C.x = 3
+GROUP BY A.aa, B.bb, C.cc</code></pre>
+<ul>
+<li>First, we can create a projection <strong>join index</strong> on <code>F</code> that simply stores the values of <code>A.x</code>, <code>B.x</code>, and <code>C.x</code>. For example, if F is the following:</li>
+</ul>
+<pre><code>F(a, b, c)
++---+---+---+
+| 1 | 1 | 1 |
+| 1 | 1 | 2 |
+| 1 | 2 | 1 |
+| 1 | 2 | 2 |
+| 2 | 1 | 1 |
++---+---+---+</code></pre>
+<ul>
+<li>We can create the following indexes:</li>
+</ul>
+<pre><code> A.aa  B.bb  C.cc
++---+ +---+ +---+
+| 6 | | 8 | | 4 |
+| 6 | | 8 | | 3 |
+| 6 | | 9 | | 4 |
+| 6 | | 9 | | 3 |
+| 7 | | 8 | | 4 |
++---+ +---+ +---+
+ A.x   B.x   C.x
++---+ +---+ +---+
+| 6 | | 8 | | 4 |
+| 6 | | 8 | | 3 |
+| 6 | | 9 | | 4 |
+| 6 | | 9 | | 3 |
+| 7 | | 8 | | 4 |
++---+ +---+ +---+</code></pre>
+<ul>
+<li>Now, we can compute the filter using these join indexes.</li>
+<li>To compute the group by using projection indexes over aa, bb, cc, and f, we simply scan through them and compute the groups in memory or do a sorting or hashing based group by.</li>
+<li>If instead we have a B+ tree over aa, bb, and cc, we can perform a nested for loop over the indexes computing the intersections of the corresponding bitmaps.</li>
+<li>If we cluster F according to these groups, then segmentation will help us avoid performing full bitmap intersections.</li>
+<li>We can also create an index mapping a group to its offset in the group-sorted file.</li>
 </ul></li>
 </ul>
   </div>
