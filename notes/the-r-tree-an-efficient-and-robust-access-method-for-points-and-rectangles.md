@@ -4,7 +4,8 @@
       object id. Queries search multiple paths, inserts take a single path and
       minimize some heuristics (e.g. minimize are increase), and deletes take a
       single path.
-    - R\* trees are R-trees with better heuristics and forced reinserts.
+    - R\* trees are R-trees with better heuristics for choosing subchildren and
+      splits, and it uses forced reinserts.
 - R-tree
     - See cow book for R-tree explanation.
 - Optimization Goals
