@@ -13,20 +13,25 @@
   <div id="container">
 <h1 id="datalog-and-recursive-query-processing-sections-1-3-6">Datalog and Recursive Query Processing (Sections 1-3, 6)</h1>
 <ul>
-<li>Syntax</li>
-<li>Three semantics: model, lfp, proof</li>
-<li>Semi-postive datalog with negation and stratified datalog with negation</li>
-<li>Stratified datalog with negation and aggregation</li>
-<li>Naive and semi-naive evaluation</li>
-<li>Query-subquery evaluation</li>
-<li>Magic sets</li>
+<li>Datalog Semantics
+<ul>
+<li>Datalog has three semantics: model-theoretic, least fixpoint, and proof-theoretic.</li>
+<li>Datalog with negation has two semantics: semipositive and stratified.</li>
+<li>Datalog with (stratified) aggregation works like GROUP BY.</li>
+<li>There are some optimizations to improve the performance of aggregation to avoid redundant computations (e.g.&#160;for a shortest path query).</li>
+</ul></li>
+<li>Semi-Naive Evaluation
+<ul>
+<li>We compute each <code>p :- p1, p2, ..., pn</code> using delta rules.</li>
+<li>For linearly recursive rules, there is also a small optimization.</li>
+</ul></li>
+<li>Query-Subquery Evaluation and Magic Sets.
+<ul>
+<li>It&#8217;s a little intense; see picture on phone.</li>
+</ul></li>
 <li>Applications
 <ul>
-<li>Program analysis</li>
-<li>Declarative networking</li>
-<li>Data integration and exchange</li>
-<li>Enterprise software</li>
-<li>Concurrent programming</li>
+<li>Datalog has found uses in the areas of program analysis (e.g.&#160;points-to analysis), declarative networking (e.g.&#160;NDLog and Bloom), data integration and exchange (e.g.&#160;schema mapping stuff), enterprise software (e.g.&#160;LogicBlox), concurrent programming, etc.</li>
 </ul></li>
 </ul>
   </div>
