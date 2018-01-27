@@ -1,19 +1,32 @@
 <h1 id="access-path-selection-in-a-relational-database-management-system">Access Path Selection in a Relational Database Management System</h1>
 <ul>
-<li>RSS storage format
+<li>tl;dr
 <ul>
-<li>Tuples from multiple tables in the same page</li>
-<li>Multiple pages form a segment</li>
-<li>SARGS</li>
+<li>The Selinger optimization algorithm is a bottom-up query optimization algorithm that uses selectivity heuristics to estimate query costs and uses dynamic programming and a restriction to left-deep plans to bring the runtime down from super duper exponential to exponential.</li>
 </ul></li>
-<li>cost = page fetches + (w * rsi calls)</li>
-<li>Selection factor estimation (assume everything is uniform)</li>
-<li>Output size is FROM size multiplied by selection factors</li>
-<li>RSI calls is FROM size multiplied by selection factors of sargable preds (assumes we look at every tuple once)</li>
-<li>Costs of clustered and unclustered indexes + full table scan</li>
-<li>Interesting orders</li>
-<li>Query optimization algorithm</li>
-<li>Interesting order equivalence classes</li>
-<li>Avoid cross joins</li>
-<li>Nested query evaluation and correlated subquery optimization (get unique values of correlated column)</li>
+<li>The Research Storage System
+<ul>
+<li>The research storage system (RSS) stores relations; relations are read tuple at a time using the research storage interface (RSI).</li>
+<li>The RSS interleaves tuples from multiple relations into sets of pages called segments.</li>
+<li>The RSS provides full table scans and B-tree scans with <strong>search arguments</strong> (SARGS).</li>
+</ul></li>
+<li>Costs for Single Relation Access Paths
+<ul>
+<li>The cost of a query plan is <code>PAGE FETCHES + w * (RSI CALLS)</code>: a weighted sum of the I/O (number of pages fetched) and the number of tuples returned by the RSI (which is a proxy for the CPU time).</li>
+<li>The catalog maintains information like the cardinality of a relation, the number of pages in the relation&#8217;s segment, the fraction of pages in the segment that hold data for the relation, the number of keys in an index, and the number of pages in an index.</li>
+<li>We compute selectivity factors for predicates like <code>column = value</code>, <code>column1 = column2</code>, <code>column &lt; value</code>, <code>column BETWEEN value AND value</code>, <code>column in (value, ...)</code>, <code>column in subquery</code>, <code>predicate or predicate</code>, <code>predicate and predicate</code>, and <code>not predicate</code>.</li>
+<li>The query cardinality is estimated as the cardinality of the cross product of the relations in the FROM clause times the selectivity of the predicate. The number of RSI calls is estimated as the cardinality of the product of the relations in the FROM clause times the selectivity of the <strong>sargable</strong> predicates.</li>
+</ul></li>
+<li>Access Path Selection for Joins
+<ul>
+<li>The optimal join for each subset of columns and each interesting order is built up using dynamic programming.</li>
+<li>As a heuristic, we only consider left-deep trees (which also allows us to pipeline things a bit better) and defer Cartesian products until the very end of the query plan.</li>
+<li>We can also use predicates like <code>A.x = B.y</code> to realize that an interesting order on <code>A.x</code> is the same as an interesting order on <code>B.y</code>.</li>
+<li>The DP table stores at worst 2^n * the number of interesting order things. This is also a rough proxy of the runtime of the algorithm.</li>
+</ul></li>
+<li>Nested Queries
+<ul>
+<li>Nested subqueries are pulled out and evaluated before their parents.</li>
+<li>Correlated subqueries are evaluated once per outer tuple.</li>
+</ul></li>
 </ul>
