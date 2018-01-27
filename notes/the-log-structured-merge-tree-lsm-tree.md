@@ -1,4 +1,13 @@
 # The log-structured merge-tree (LSM-tree)
+- tl;dr
+    - If your system gets more writes than reads, you should batch up writes
+      and make them sequential, and slowly move these writes into a more
+      structured form on disk in the background. The LSM-tree is a realization
+      of this idea for B+-tree indexes.
+    - We also see this idea in C-store with WS data slowly being moved to RS.
+      Here, it's done because the RS data structures are expensive to maintain.
+      We also see in Hekaton because we want to minimize the number of disk
+      writes we do and the fact that all reads can be serviced from memory.
 - 2 component LSM-tree
     - C0 in-memory component (some sort of tree, not necessarily a B+ tree)
     - C1 on-disk, densely-packed, contiguously-allocated B+ tree component
