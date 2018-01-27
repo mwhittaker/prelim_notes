@@ -1,13 +1,60 @@
 <h1 id="eddies-continuously-adaptive-query-processing">Eddies: Continuously Adaptive Query Processing</h1>
 <ul>
-<li>Adaptability over best case performance</li>
-<li>Synchronization barriers (sort-merge join)</li>
-<li>Moments of symmetry (nested loop join)</li>
-<li>Pre-optimization</li>
-<li>Done and ready bits</li>
-<li>Eddy as a wrapper around data sources and n operators</li>
-<li>Each operator runs in its own thread with a message queue</li>
-<li>Naive eddy: learn delay of operators by filling up message queues</li>
-<li>Fast eddy: learn selectivities of operators using lottery scheduling</li>
-<li>Dynamic performance and windowed lottery scheduling</li>
+<li>tl;dr
+<ul>
+<li>Instead of choosing a query plan up front, we can dynamically estimate the cost of operators, their selectivity, the best join order, etc at runtime using backpressure and lottery scheduling. This favors adaptability over best case performance.</li>
+</ul></li>
+<li>Reorderability of Plans
+<ul>
+<li>A <strong>synchronization barrier</strong> occurs when one relation is stuck waiting for another (e.g.&#160;in a sort merge join, the relation with larger values waits for the relation with smaller values).</li>
+<li>A <strong>moment of symmetry</strong> occurs when the inner and outer relations of a join can be swapped (provided some extra bookkeeping is done). For example, (R TNLJ S) can be swapped after every complete iteration of S, so long as R advances its cursor and doesn&#8217;t return tuples before it.</li>
+<li>Eddies prefer joins with few synchronization barriers and lots of moments of symmetry. They use ripple joins.</li>
+<li>In short, if we have some join R JOIN S in an eddy, we want to be able to shove in tuples from R and tuples from S in whatever order we desire. We don&#8217;t want to be constrained to feed in one tuple of R and then all the tuples from S.</li>
+</ul></li>
+<li>Rivers and Eddies
+<ul>
+<li>Given a query, River uses a standard optimizer to form a spanning tree of the relations in the query.</li>
+<li>Eddies are limited to ripple joins and index nested loop joins.</li>
+<li>A priority queue of tuples is used where each tuple has associated ready and done bits.</li>
+</ul></li>
+<li>Naive Eddy: Fluid Dynamics and Operator Costs
+<ul>
+<li>Imagine the query <code>SELECT * FROM R WHERE s1() and s2();</code> where both predicates have equal selectivity but one is much faster than the other. If we pipeline the two predicates, we should run the faster one first. In eddy, because of back pressure, the faster one will end up getting more tuples even though we don&#8217;t know which one is faster apriori.</li>
+</ul></li>
+<li>Fast Eddy: Learning Selectivities
+<ul>
+<li>Imagine again the query <code>SELECT * FROM R WHERE s1() and s2();</code> but now assume that both predicates take the same amount of time but one has much higher selectivity. In a pipelined plan, we should put the higher selectivity operator first.</li>
+<li>Eddies use lotter scheduling (giving tickets to operators when they get tuples and taking them back when they produce tuples) to decide how to route tuples. This favors tuples with higher selectivity.</li>
+</ul></li>
+<li>Joins
+<ul>
+<li>With a query like <code>SELECT * FROM R, S, T WHERE R.a = S.a and S.b = T.b</code>, we would like to perform the join with the smallest selectivity first. Eddy&#8217;s lottery scheduling will do this automatically without fancy selectivity estimation.</li>
+</ul></li>
+<li>Responding to Dynamic Fluctuations
+<ul>
+<li>Lottery scheduling favors all tickets equally, but more recent tickets should be favored over older tickets. Eddies use a windowed lottery scheduling scheme to handle this.</li>
+</ul></li>
+<li>Advantages of Eddies
+<ul>
+<li>Eddies allows for bushy joins unlike some other optimizers like Selinger.</li>
+<li>Eddies selectivity estimation can learn a good join order without needing to have good statistics.</li>
+<li>Eddies can take into account the time of an operator instead of just the number of IOs that it requires.</li>
+<li>Eddies use of re-orderable joins allows it to be used with online aggregation.</li>
+<li>It is much simpler than a full blown query optimizer.</li>
+<li>Eddies can run predicates in parallel without a fixed order instead of being strictly pipelined.</li>
+<li>Eddies are more adaptive to bad selectivities. We want to avoid terrible plans more than get perfect plans.</li>
+<li><p>Dynamically re-ordering joins can do better than any fixed order. For example, imagine the join <code>Q(a, b) :- R(a), S(a, b), T(b)</code> with the following relations:</p>
+<pre><code>R S  T
+1 23 3
+1 23 3
+1 14 3
+1 14 3</code></pre>
+If we join the first two tuples of S with all of R and then the last two tuples of S with all of T, we do better than any fixed ordering of the joins.</li>
+</ul></li>
+<li>Disadvantages of Eddies
+<ul>
+<li>Sometimes, the order of joins is forced (e.g.&#160;queries like <code>SELECT * FROM R, S, T WHERE R.a + S.b = T.c</code>, avoiding cross products, sorting into a sort merge join). In these cases, eddies isn&#8217;t as flexible.</li>
+<li>Fixed query plans can run really fast; managing priority queues and routing things dynamically can be less fast.</li>
+<li>Eddies have worse best case performance than a fixed query plan.</li>
+</ul></li>
 </ul>
