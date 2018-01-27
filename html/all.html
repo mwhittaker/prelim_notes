@@ -953,41 +953,46 @@ GROUP BY A.aa, B.bb, C.cc</code></pre>
 </ul>
 <h1 id="the-r-tree-an-efficient-and-robust-access-method-for-points-and-rectangles">The R*-tree: an Efficient and Robust Access Method for Points and Rectangles</h1>
 <ul>
+<li>tl;dr
+<ul>
+<li>R-trees are like B+ trees that map an objects bounding rectangle to its object id. Queries search multiple paths, inserts take a single path and minimize some heuristics (e.g.&#160;minimize are increase), and deletes take a single path.</li>
+<li>R* trees are R-trees with better heuristics and forced reinserts.</li>
+</ul></li>
 <li>R-tree
 <ul>
-<li>Like a B+ tree but maps bounding boxes to RIDs</li>
-<li>Internal nodes contain bounding boxes of children</li>
-<li>Search searches multiple paths, whichever overlaps the query</li>
-<li>Insert searches down the path which requires least enlargement (ties broken by area) and potentially splits rearrange to minimize overlap</li>
-<li>Delete just deletes</li>
+<li>See cow book for R-tree explanation.</li>
 </ul></li>
-<li>Optimization goals
+<li>Optimization Goals
 <ul>
-<li>Minimize rectangle area</li>
-<li>Minimize rectangle overlap</li>
-<li>Minimize rectangle perimeter</li>
-<li>Maximize storage utilization</li>
+<li><strong>Minimize rectangle area</strong>: Minimizing area will minimize the chance of overlap which will decrease the number of searched paths.</li>
+<li><strong>Minimize rectangle overlap</strong>: Minimizing rectangle overlap will decrease the number of searched paths.</li>
+<li><strong>Minimize rectangle perimeter</strong>: Minimizing perimeter will make rectangles more square which makes them easier to pack together.</li>
+<li><strong>Maximize storage utilization</strong>: Maximizing storage utilization ( i.e.&#160;the number of rectangles in each inner node) will decrease the hight of the tree making queries run faster.</li>
 </ul></li>
-<li>R-trees vary on find subchild and split
+<li>R-tree Variants
 <ul>
-<li>Original find subchild: choose one with minimum enlargement (break ties on area)</li>
-<li>Original split: minimize overlap</li>
-<li>Original split (quadratic approximation): choose two seeds which fill least area of bounding box, then repeatedly pick the other boxes that have the largest difference in area increase when assigned to both groups</li>
-<li>Greene's split: choose seeds as above and then divide in half along most distant axis</li>
+<li>R-trees variants in their two algorithms: ChooseSubtree (at an internal node, ChooseSubtree chooses the child into which we should insert) and Split (at an overfull leaf, Split chooses how to split the data into two leaves).</li>
+<li><strong>Original ChooseSubtree</strong>: Choose the subtree which requires the least weight gain. If all nodes gain equal weight, select the lightest child.</li>
+<li><strong>Original Quadratic Split</strong>: This algorithm is an approximation to minimize the total area. Begin with the two nodes that produce the sparsest bounding box. Repeatedly insert the data which has the greatest weight gain difference when inserted into both bounding boxes.</li>
+<li><strong>Greene&#8217;s Split</strong>: Choose the two nodes with sparsest bounding box, then split nodes in half along the axis that the two nodes are most distant.</li>
 </ul></li>
-<li>R* tree find subchild
+<li>R*-tree ChooseSubtree
 <ul>
-<li>For internal nodes pointing at internal nodes, use original find</li>
-<li>For internal nodes pointing at children, choose child which increases overlap the least, breaking ties by least area increase and then least area. The overlap for a child is the sum of overlaps with all other children.</li>
+<li>For internal nodes pointing at internal nodes, use the original ChooseSubtree.</li>
+<li>For internal nodes pointing at leaves, choose the leaf which minimizes the overlap increase with other leaves. If there is a tie, use the original heuristics of minimizing are increase, breaking ties on smallest area.</li>
 </ul></li>
-<li>R* tree split
+<li>R*-tree Split
 <ul>
 <li>For each axis, perform all splits where each split has at least m entries</li>
 <li>Compute the sum of perimeters for the bounding boxes of all splits</li>
 <li>Choose axis which minimizes perimeter</li>
 <li>Then choose the partition which minimizes overlap, ties broken by area</li>
 </ul></li>
-<li>Reinsert values (in decreasing order of how far away they are from the bounding box)</li>
+<li>Forced Reinsert
+<ul>
+<li>Whenever a node is inserted that overflows a leaf, we take some fraction of the overflowed nodes (in decreasing order of how far away they are from the center of the bounding box) and reinsert them into the tree. This might lead to more splits, it might avoid all the splits.</li>
+<li>Split is like a local reorganization of data, and reinsertion is like a more global reorganization of data.</li>
+</ul></li>
 </ul>
 <h1 id="the-log-structured-merge-tree-lsm-tree">The log-structured merge-tree (LSM-tree)</h1>
 <ul>
