@@ -13,35 +13,52 @@
   <div id="container">
 <h1 id="the-volcano-optimizer-generator-extensibility-and-efficient-search">The Volcano Optimizer Generator: Extensibility and Efficient Search</h1>
 <ul>
-<li>Design principles
+<li>Overview
 <ul>
-<li>Lots of domains modelled with algebras</li>
-<li>Pattern matching is good</li>
-<li>Don't use IRs</li>
-<li>Compile plans rather than interpret</li>
-<li>Use DP</li>
+<li>Volcano is an optimizer generator that takes as input things like logical algebra, physical algebra, and translation rules and outputs a query optimizer that uses a top-down dynamic programming query optimization algorithm.</li>
 </ul></li>
-<li>Inputs
+<li>Design Principles
 <ul>
-<li>Logical operators</li>
-<li>Physical algorithms</li>
-<li>Logical to logical transformation rules</li>
-<li>Logical to physical transformation rules</li>
-<li>Enforcers (algorithms that don't correspond to logical operator)</li>
-<li>Abstract cost data type and cost function for algorithms</li>
-<li>Logical and physical properties data type and function for extracting properties of expressions and plans</li>
-<li>Applicability function saying whether a given algorithm can implement an expression with the given physical properties and the physical requirements on its inputs</li>
+<li>Volcano followed the following design principles:</li>
+<li>Lots of domains (e.g.&#160;relational, object relational) are modelled with algebras.</li>
+<li>Pattern matching is a good way to describe translations.</li>
+<li>Don&#8217;t use intermediate representations (don&#8217;t understand this one).</li>
+<li>Compile optimizers rather than interpreting them.</li>
+<li>Use dynamic programming.</li>
 </ul></li>
-<li>Search algorithm
+<li>Optimizer Generator Input
 <ul>
-<li>Parameterized on logical expression, physical properties, and cost limit</li>
-<li>3 moves: logical to logical, logical to physical, and enforcer</li>
-<li>Memoize (logical expression, physical properties) -&gt; best plan</li>
-<li>A couple of tricks to avoid infinite loops and to speed things up
+<li>Volcano takes the following things as input:</li>
+</ul>
+<ol type="1">
+<li>A set of logical operators (e.g.&#160;join, select, project).</li>
+<li>A set of physical algorithms (e.g.&#160;tuple nested loop join, full table scan).</li>
+<li>Logical to logical transformation rules (e.g.&#160;join is commutative).</li>
+<li>Logical to physical transformation rules (e.g.&#160;join to sort merge join).</li>
+<li>Enforcers: algorithms which do not have a corresponding logical algebra operator (e.g.&#160;sort, decompress).</li>
+<li>An abstract cost data type and a corresponding cost function for algorithms.</li>
+<li>A logical and physical properties data type (e.g.&#160;sorted, compressed) and function for extracting properties of expressions and plans.</li>
+<li>Applicability functions saying whether a given algorithm can implement an expression with the given physical properties and the physical requirements on its inputs.</li>
+</ol></li>
+<li>Search Algorithm
 <ul>
-<li>In progress flags</li>
-<li>Know when some physical properties imply others</li>
+<li>The Volcano search algorithm has type <code>FindBestPlan(logical plan, physical properties, cost limit) -&gt; physical plan</code>.</li>
+<li>Given a logical plan and a desired set of physical properties, it considers the following three kinds of moves:</li>
+</ul>
+<ol type="1">
+<li>A logical transformation (e.g.&#160;swapping join order).</li>
+<li>A logical to physical transformation (e.g.&#160;join to sort merge join).</li>
+<li>An enforcer (e.g.&#160;a sort).</li>
+</ol>
+<ul>
+<li>The results are memoized in a (logical expression, physical properties) -&gt; best plan hash table.</li>
+<li>Volcano uses a couple of tricks to avoid infinite loops and to speed things up. For example, in progress plans are marked in progress to avoid infinite transformation loops.</li>
+<li>The cost limit can be used to prune out plans early. For example, if a child of an operator costs more than the limit, we can stop looking at other children. Using a cost limit at all though is not motivated well.</li>
 </ul></li>
+<li>Questions
+<ul>
+<li>Q: What are the pros and cons of volcano style query optimization vs Selinger style query optimization?</li>
+<li>A: This paper says that the Volcano query optimizer is &#8220;driven by needs rather than by possibilities&#8221;. It also says that it&#8217;s useful for when the number of plans exceeds the limits of a bottom-up approach.</li>
 </ul></li>
 </ul>
   </div>
