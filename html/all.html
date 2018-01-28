@@ -176,18 +176,51 @@
 </ul>
 <h1 id="the-five-minute-rule-twenty-years-later">The Five Minute Rule Twenty Years Later</h1>
 <ul>
-<li>Derivation of five minute rule</li>
-<li>Assumes flash is a cache between RAM and disk</li>
-<li>2009 5 minute rules
+<li>tl;dr
 <ul>
-<li>4 KB RAM/disk = 1.5 hours</li>
-<li>64 KB RAM/disk = 5 minutes</li>
-<li>4 KB RAM/flash = 15 minutes</li>
-<li>4 KB flash/disk = 2.5 hours</li>
+<li>Flash sits between RAM and disk and can be used either as extended RAM or extended disk. File systems should view it as RAM and databases should view it as disk.</li>
 </ul></li>
-<li>Flash means checkpoints can be faster</li>
-<li>Page size effect on B+ trees</li>
-<li>Query processing has to to take flash/disk cost into account</li>
+<li>Derivation of the Five Minute Rule
+<ul>
+<li>See https://github.com/mwhittaker/five_minute_rule</li>
+</ul></li>
+<li>Overview
+<ul>
+<li>The paper says that flash sits between RAM and disk and says that it can be viewed either as extended RAM or extended disk. It argues that file systems should use it as extended RAM and that databases should use it as extended disk.</li>
+<li>Admittedly, this doesn&#8217;t make much sense to me.</li>
+</ul></li>
+<li>Assumptions
+<ul>
+<li>The paper lists a bunch of assumptions, most of which don&#8217;t seem too important.</li>
+</ul></li>
+<li>Five Minute Rules
+<ul>
+<li>If we compute new five minute rules for RAM/disk, RAM/flash, and flash/disk for 4 KB objects, we get 1.5 hours, 15 minutes, 2.5 hours.</li>
+<li>Increasing the object size lowers the break even times.</li>
+</ul></li>
+<li>Page Movement
+<ul>
+<li>Both operating systems and databases move pages in similar ways.</li>
+</ul></li>
+<li>Tracking Page Locations
+<ul>
+<li>Say a file system inserts a new file. It has to modify and write a lot of stuff like pointer pages. If it view flash as disk, it performs these writes to flash and eventually the writes are moved to disk. Thus, we have to double the amount of persistent writes.</li>
+<li>A database simply logs stuff in a log, so it doesn&#8217;t have to do many persistent writes, so treating flash as disk is ok.</li>
+</ul></li>
+<li>Checkpoints
+<ul>
+<li>Every so often, a database has to checkpoint stuff somewhere persistent. Using flash as a disk lets it write checkpoints faster. I&#8217;m not sure why this arugment doesn&#8217;t also apply to file systems writing stuff to flash though?</li>
+<li>An OS doesn&#8217;t checkpoint, so it should treat flash as RAM.</li>
+</ul></li>
+<li>Page Size
+<ul>
+<li>With a disk, seek time dominates transfer time, so it&#8217;s better to have bigger B+ tree nodes. With flash, seek time is less compared to transfer time, so we can shrink our B+ tree nodes a bit.</li>
+</ul></li>
+<li>Query Processing
+<ul>
+<li>With three levels in the memory hierarchy, we have to design level external sorts, hashing algorithms, etc.</li>
+<li>Also, unclustered index joins might become faster than full table scans since the flash seek time is much lower.</li>
+</ul></li>
 </ul>
 <h1 id="a-history-and-evaluation-of-system-r">A History and Evaluation of System R</h1>
 <ul>
