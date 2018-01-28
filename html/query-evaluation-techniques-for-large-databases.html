@@ -13,152 +13,100 @@
   <div id="container">
 <h1 id="query-evaluation-techniques-for-large-databases">Query Evaluation Techniques for Large Databases</h1>
 <ul>
+<li>tl;dr
+<ul>
+<li>Query evaluation is really just hashing, sorting, and partitioning with a whole smorgasbord of tricks.</li>
+</ul></li>
 <li>Architecture of Query Execution Engines
 <ul>
-<li>basic stuff about logical vs physical algebra, iterators, left-deep vs right-deep vs bushy plans, an overview of how volcano represents iterators in C</li>
-<li>mostly basic or outdated stuff</li>
+<li>This section provides an overview of a lot of database basics including logical vs physical relational algebra, iterators, left-deep vs right-deep vs bushy query plans, and how volcano represents operators.</li>
 </ul></li>
 <li>Sorting
 <ul>
-<li>Relacement sort for runs of size 2B</li>
-<li>Double buffering where not every input is double buffered. Look at high key to predict which one will be read next</li>
-<li>Smarter merge fanning with runs of different sizes eg 12 runs 10 buffers</li>
-<li>Blocked IO aka reading and writing more than a page at a time. This is similar to double buffering</li>
-<li>Paper describes how hybrid hash is better for data sizes that are slightly bigger than memory and gives a confusing hybrid external sort. Can just write a small run to disk, then sort the whole thing and merge</li>
-</ul></li>
-<li>HASHING
-<ul>
-<li>Grace hash but with range partitioning at first instead of hash partitioning</li>
-<li>Overflow avoidance: grace hash</li>
-<li>Overflow resolution: hybrid hash</li>
-<li>Choosing a good hash: we can maintain stats on the data during the first partitioning to help on subsequent partitioning</li>
-</ul></li>
-<li>DISK ACCESS
-<ul>
-<li>Sparse clustered index (pointer to each page) vs dense unclustered inhdex</li>
-<li>Unclustered windowed scans with priority queue</li>
-</ul></li>
-<li>Aggregation and duplicate removal
-<ul>
-<li>nested loop aggregation (for each input, iterate over output of groups)</li>
-<li>sort based duplicate removeal: dedup as we merge</li>
-<li>sort base agg; aggregate as we merge</li>
-<li>hash based algo</li>
-</ul></li>
-<li>Binary Matching Operations (akak joins)
-<ul>
-<li>nested loop joins: nothing new</li>
-<li>heap-filter merge join: sort the smaller relation; generate runs of the bigger relation using replacement sort, and then do a merge sort of the two</li>
-<li>hybrid merge join. sort the outer relation and merge it with an index on the inner relation. then sort by rid and retreive the inner tuples</li>
-<li>pointer joins: tuples in R can store pointers to S (like a join index; also like an index join)</li>
-</ul></li>
-<li>Universal Quantification (aka division)?
-<ul>
-<li>TODO</li>
-</ul></li>
-<li>Sorting
-<ul>
-<li>Non-uniform block sizes and forecasting</li>
-<li>Dynamically adjusted block sizes to balance I/O and CPU</li>
-<li>Smarter merging when the number of runs is not a multiple of the number of blocks.</li>
-<li>Smaller fanout for the last merge so it doesn&#8217;t consume too much memory when fed into parent</li>
+<li><strong>Trick</strong>: We can use heap-based replacement sort during the initial pass of an external sort to generate runs of size $2B$ instead of size $B$.</li>
+<li><strong>Trick</strong>: During a merge, we can use double buffering to overlap IO and CPU. We also do not need to double buffer every input run. We can look at the high key of every page from every run to see which one will get buffered out first.</li>
+<li><strong>Trick</strong>: During a merge, we do not always have to merge in as many runs as possible. Sometimes, we can merge fewer runs together to reduce the total amount of merging done. For example, consider if we have 12 runs with $B = 10$. It&#8217;s better to merge together 3 or 4 runs and then merge everything together.</li>
+<li><strong>Trick</strong>: When merging runs, it might be better to read two blocks of every run in at a time and write out two blocks of every run at a time. We also don&#8217;t have to block every single run; only some.</li>
+<li><strong>Trick</strong>: If we&#8217;re sorting a relation that&#8217;s only slightly bigger than memory, we can write out a small sorted run to disk, then sort everything else in memory, and then merge the two together.</li>
 </ul></li>
 <li>Hashing
 <ul>
-<li>Merge small overflow buckets together if needed</li>
-<li>Hybrid hash join: build a hash table in memory and dynamically spill things out to disk. Three options:
+<li><strong>Trick</strong>: Grace hash join can use range partitioning instead of hash partitioning (though it&#8217;s not clear why you would ever do that).</li>
+<li><strong>Algorithm</strong>: Hybrid hash join is like Grace hash join, but one of the runs is kept in memory.</li>
+<li><strong>Trick</strong>: If we have to do recursive partitioning, we can gather statistics on the data during the first partitioning pass to choose a good hash function for subsequent partitionings.</li>
+</ul></li>
+<li>Disk Access
 <ul>
-<li>Write a fixed fraction of the hash table to disk</li>
-<li>Bucket tuning and dynamic destaging: write lots of small buckets to disk which later get merged. Spill biggest partitions to disk.</li>
-<li>Use precomputed stats</li>
+<li><strong>Trick</strong>: A clustered index can point to the beginning of each page instead of pointing to every record.</li>
+<li><strong>Trick</strong>: When we&#8217;re reading from an unclustered index, we can keep a bounded sized heap of the record ids and retrieve them in semi-sorted order.</li>
+</ul></li>
+<li>Aggregation and Duplicate Removal
+<ul>
+<li><strong>Algorithm</strong> (Nested Loops): For each input tuple, iterate over the output groups and either update a group if it is found or create a new group. This algorithm can be used if a single tuple is allowed to contribute to multiple groups.</li>
+<li><strong>Trick</strong>: For both sort based and hash based aggregation and duplicate removal, we can start performing deduplication and aggregation as the algorithms run; we do not have to wait for the final sort or grouping.</li>
+</ul></li>
+<li>Binary Matching Operations (aka Join, Intersect, Union, etc)
+<ul>
+<li><strong>Algorithm</strong> (Heap-Filter Merge Join): Given a big relation $R$ and a small relation $S$, sort the smaller relation $S$. Then, use replacement sort to generate runs of $2B$ pages from $R$. Run a merge join on these two, then repeat.</li>
+<li><strong>Algorithm</strong> (Index Merge Join): Given a relation $R$ and an index on $S$, we can sort $R$ and then do a merge join with the index on $S$. After the merge, we sort the join by the record ids in the index and retrieve all the tuples.</li>
+<li><strong>Trick</strong>: Tuples in a relation can store pointers to tuples in another relation with which it will join; this is like a join index (or maybe it is exactly a join index?)</li>
+</ul></li>
+<li>Universal Quantification (aka Division)
+<ul>
+<li>R(A, B) / S(B) should return the set of R.A which is paired with every entry in S.B.</li>
+<li><strong>Algorithm</strong> (Sort Based Division): Sort both $R$ and $S$. Then, perform a pseudo-merge join between the two.</li>
+<li><strong>Algorithm</strong> (Hash Based Division): Construct a hash table on $S$ mapping values to a unique identifier. Then, create a hash table on $R$ mapping each value to a bitmap, setting the bits using the hash table on $S$. If $R$ doesn&#8217;t contain duplicates, we can simply use a hash set on $S$ to count the number of values in $R$. If $R.B$ is guaranteed to exist in $S$, then we can just group and count $R$ without needing to manipulate $S$.</li>
+</ul></li>
+<li>Duality of Sort and Hash
+<ul>
+<li>Sorting breaks stuff up and then merges it together. Hashing breaks stuff up and then merges it together too.</li>
+<li>External sort can start merging runs before all runs have been made. This is known as eager merging. Similarly, a grace hash join can recursively partition depth-first or breadth-first. Depth-first partitioning reduces the time to first output.</li>
+<li>During a hash join or sort merge join, we can use a bloom filter on one relation to help filter out values from the other.</li>
+</ul></li>
+<li>Execution of Complex Query Plans
+<ul>
+<li>Left-deep query plans limit the amount of resource contention between operators. If all the operators pipeline, then likely each one doesn&#8217;t have that much state. If one of the operators blocks, then its parents don&#8217;t contend with it.</li>
+<li>Right-deep plans with hash joins can build the hash tables on the left relations in parallel.</li>
+<li>Imagine we have two sort operations feeding into a sort merge join which is then fed into a sort on another attribute. Both children need to reserve some buffer space for the fan-in. The final sort needs some buffer space to generate sorted runs. Thus, multiple operators can compete for resources, and the number of buffer pages allocated to each operator should be proportional to the amount of data they have to process.</li>
+<li>Optimizing big trees can be ineffective because it can be hard get accurate selectivity estimates. Ingres did a trick called decomposition in which subtrees of the big plan were optimized and executed incrementally. This made it easier to gather statistics.</li>
+</ul></li>
+<li>Mechanisms for Parallel Query Execution
+<ul>
+<li><strong>Speedup</strong> is about decreasing the time for a fixed task; <strong>scaleup</strong> is about doing more with more.</li>
+<li>A <strong>distributed database</strong> is a set of cooperating independent databases, whereas a <strong>parallel database</strong> is a set of processing nodes run by a single point of command. I think this terminology is outdated.</li>
+<li>The three distributed architectures are shared memory, shared disk, and shared nothing (and shared nothing with each node being shared memory).</li>
+<li>The different kinds of parallelism are inter-query, vertical intra-query, horizontal intra-query, and intra-operator.</li>
+<li>The bracket model of parallelism puts every operator in its own process and forces everything to communicate over the network. Exchange lets operators live within the same process.</li>
+<li>Pipeline parallelism can be difficult to exploit because stages of the pipeline become a bottleneck.</li>
+</ul></li>
+<li>Parallel Algorithms
+<ul>
+<li><strong>Algorithm</strong> (Distributed Sort): There are two approaches. Either we range partition initially and the remote nodes create sorted runs. This requires us to have good statistics on the data. Or, we sort locally and then range partition sorted runs. Now, remote nodes merge instead of create sorted runs. We can build stats on the first pass to try and get better partitioning. If there is data skew, this approach can limit parallelism in the second pass. It can also lead to deadlock if you implement it really naively.</li>
+<li><strong>Algorithm</strong> (Symmetric Hash Join): If both relations fit in memory, we can stream inputs from either one building up a hash table of both relations.</li>
+<li><strong>Algorithm</strong> (Asymmetric Broadcast Join): If one relation is already partitioned, we can broadcast the other (if it is small).</li>
+<li><strong>Algorithm</strong> (Bloom Filter Semijoin Trick): If we&#8217;re joining $R$ and $S$ on attribute $a$, we can create a bloom filter on $R.a$ and send it to $S$. Then, $S$ sends to $R$ only the tuples in $S$ that match the bloom filter.</li>
+<li><strong>Algorithm</strong> (Grid Broadcast Join): For arbitrary theta joins, we can organize nodes into a rectangular grid and broadcast both relations.</li>
+</ul></li>
+<li>Nonstandard Query Processing Algorithms
+<ul>
+<li>Nested relational databases use nest and unnest operations.</li>
+<li>Temporal and scientific database management systems use band joins (e.g. `R.a IN [S.b - epsilon, S.b + epsilon]) using a merge join like algorithm. Some algorithms are also dependent on the order of streams.</li>
+<li>Object oriented databases have to deal with lots of object id pointer chasing, which can be partially alleviated by batching and sorting pointer chases.</li>
+<li>More control operators, like the exchange operator:
+<ul>
+<li>Store-and-scan materializes or caches intermediate data.</li>
+<li>Split allows data to be read from multiple consumers without having to materialize the input.</li>
+<li>Click style schedulers help glue together push and pull operators (though I though exchange already did that)</li>
+<li>Ingres&#8217; plan decomposition trick can be turned into an operator.</li>
 </ul></li>
 </ul></li>
-<li>Aggregation and duplicate removal
+<li>Additional techniques for Performance Improvements
 <ul>
-<li>Nested loop algorithm: for each tuple, scan output groups/relation</li>
-<li>Sort approach is good for rollups</li>
-</ul></li>
-<li>Joins
-<ul>
-<li>SMJ can be performed on two indexes</li>
-<li>Heap-filter merge-join: sort smaller inner relation; process replacement sorted blocks on the output relation and merge with inner.</li>
-</ul></li>
-<li>Division: R(A, B) and S(B)
-<ul>
-<li>Direct sort-based method: sort R and S. Scan over R and repeatedly scan over S. Emit tuples in R that match everything in S.</li>
-<li>Direct hash-based method: Create a hash table indexing tuples s_1, &#8230;, s_n in S. Assign n-length bitvector for each tuple in R and record which tuples match everything in S.</li>
-<li>Divisor (denominator) partitioning: partition S and output tuples that match all parts of S.</li>
-<li>Quotient (numerator) partitioning: partition R and output tuples that match any partition.</li>
-</ul></li>
-<li>Duality of hash and sort
-<ul>
-<li>Merging and partitioning are duals.</li>
-<li>Sorting is good because it produces interesting orders; it&#8217;s bad because the fanout depends on the size of the larger relation and it is algorithmically slower</li>
-<li>Hashing is good because it depends on the size of the smaller relation and is algorithmically faster; bad because of skew and no interesting orders</li>
-</ul></li>
-<li>Execution of complex query plans
-<ul>
-<li>Complex plans have multiple operators open at once</li>
-<li>Right deep plans can build hash tables on left base tables concurrently</li>
-<li>Ingres style: repeatedly run and materialize one (or more) operator at a time; use stats for later parts of plan.</li>
-</ul></li>
-<li>Mechanisms for parallel query execution
-<ul>
-<li>Speedup vs scaleup</li>
-<li>Distributed (multiple independent databases) vs parallel (one database managing multiple compute nodes)</li>
-<li>Interquery vs (vertical vs bushy) inter-operator vs intra-operater</li>
-<li>Bracket (all tuples sent via IPC) vs operator</li>
-<li>Shared nothing vs shared disk vs shared nothing (+ hybrid)</li>
-</ul></li>
-<li>Parallel algorithms
-<ul>
-<li>Sort
-<ul>
-<li>Range partition across nodes, then each node sorts</li>
-<li>Locally sort, then range partition and send sorted runs, nodes merge received sorted runs</li>
-<li>Deadlock is possible if results are merged without buffering</li>
-</ul></li>
-<li>Equijoin
-<ul>
-<li>Partitioned symmetric hash join</li>
-<li>Distributed Grace join (ala Gamma)</li>
-<li>Partition the bigger relation and fully replicate the smaller</li>
-<li>Lucja Kot bloom filter semijoin</li>
-</ul></li>
-<li>Join
-<ul>
-<li>Symmetric fragment and replicate (grid join)</li>
-</ul></li>
-</ul></li>
-<li>Non-standard query processing algorithms
-<ul>
-<li>Nested relations: unnest and nest</li>
-<li>Scientific and time series
-<ul>
-<li>Band join (R.a - c &lt;= S.a &lt;= R.a + c) with modified sort or hash join</li>
-</ul></li>
-<li>ODBMS</li>
-<li>Control operators
-<ul>
-<li>store-and-scan (cache)</li>
-<li>split (buffering + disk spill)</li>
-<li>Active scheduler (arrows pointing away) vs passive scheduler (a la Click)</li>
-<li>choose-plan Ingres style</li>
-</ul></li>
-</ul></li>
-<li>Advanced techniques
-<ul>
-<li>Precomputation: views, join indexes, indexe</li>
-<li>Compression
-<ul>
-<li>Index key compression and straight up compression</li>
-<li>Less I/O, computation on compressed data, minimize skew</li>
-</ul></li>
-<li>Surrogates
-<ul>
-<li>Don&#8217;t copy tuples, just point to them</li>
-</ul></li>
-<li>Bloom filters</li>
+<li>Precomputation like views join index, and indexes.</li>
+<li>Compression like index key compression and just compression.</li>
+<li>Surrogates, which is a fancy way of saying to point at tuples instead of copying them.</li>
+<li>Bloom filters.</li>
+<li>Specialized hardware.</li>
 </ul></li>
 </ul>
   </div>
