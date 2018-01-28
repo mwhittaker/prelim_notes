@@ -1,34 +1,56 @@
 <h1 id="a-history-and-evaluation-of-system-r">A History and Evaluation of System R</h1>
 <ul>
-<li>Phase 0
+<li>tl;dr
 <ul>
-<li>Single-user PL/I SQL interpreter with no concurrency or recovery</li>
-<li>Planned throwaway</li>
-<li>Subqueries but no joins</li>
-<li>Focus on refining SQL interface</li>
-<li>Catalog as relations</li>
-<li>XRM storage layer with TIDs, tuples with pointers to domains, and inversions</li>
-<li>Optimizer minimized number of tuples</li>
-<li>Optimizer was CPU bound</li>
-<li>Joins are important and optimizer should optimize common case</li>
+<li>System R is the granddaddy of all relational databases, introducing wildly influential ideas such as query optimization, compiled queries, views, degrees of isolation, multi granularity locking, etc.</li>
 </ul></li>
-<li>Phase 1
+<li>Overview
 <ul>
-<li>RDS (optimizer) and RSS (storage system)</li>
-<li>SQL or embedded queries + query compilation + catalog dependency tagging and recompilation</li>
-<li>RSS was row-store</li>
-<li>B+ trees, index scans, full table scans, tnlj, inl, smj</li>
-<li>Query optimizer weighted sum of RSS calls and IO using Selinger style I/O.</li>
-<li>Views stored as parse trees and used for authorization</li>
-<li>Logging and shadow pages</li>
-<li>Hierarchical intention locks + threw away predicate locks</li>
+<li>The development of System R was divided into three phases: Phase 0 (an experimental period where the SQL language was honed), Phase 1 (where System R was actually built) and Phase 2 (where System R was evaluated).</li>
 </ul></li>
-<li>Phase 2
+<li>Phase Zero: An Initial Prototype
 <ul>
-<li>Evaluation</li>
-<li>Added EXISTS, LIKE, prepared statements, outer joins</li>
-<li>Optimizer evaluated with uniform independent data</li>
-<li>Shadow pages bad locality and extra book keeping</li>
-<li>RU, RC, and serializable; bad implementations and serializable mostly used</li>
+<li><strong>Query Language</strong>: SQL with subqueries but no joins. No language embedding.</li>
+<li><strong>Query Optimization</strong>: The query optimizer tried to minimize the number of tuples read, but should have minimized the number of I/Os and the CPU cost.</li>
+<li><strong>Access Methods and Physical Storage</strong>: Tuples stored pointers into columnar <strong>domains</strong>. <strong>Inversions</strong> were like indexes from these domains to tuple ids. This meant reading a tuple took a couple of IOs.</li>
+<li><strong>Concurrency Control</strong>: No concurrency.</li>
+<li><strong>Recovery</strong>: No recovery.</li>
+<li><strong>Misc</strong>: The catalog was stored as relations.</li>
+<li><strong>Lessons learned</strong>: Joins are important, and the query optimizer should optimize for the common case.</li>
+</ul></li>
+<li>Phase One: Construction of a Multiuser Prototype
+<ul>
+<li><strong>Query Language</strong>: SQL with joins.</li>
+<li><strong>Query Optimization</strong>:
+<ul>
+<li>The Selinger query optimizer minimized a weighted combination of IOs and RSS calls (as a proxy for CPU cost).</li>
+<li>Queries were compiled into pre-written machine code fragments. A preprocessor would compile queries written in source code. If a query plan became invalidated (e.g.&#160;an index it depended on was dropped, the query was recompiled).</li>
+</ul></li>
+<li><strong>Access Methods and Physical Storage</strong>:
+<ul>
+<li>Tuples were stored row-by-row with B-tree indexes.</li>
+<li>Query plans had nested loop joins, index joins, and sort merge joins.</li>
+</ul></li>
+<li><strong>Concurrency Control</strong>:
+<ul>
+<li>Originally, they tried predicate locks, but it was a bit hard to pull off.</li>
+<li>Ended with multigranularity locks with intention locks.</li>
+<li>Offered RU, RC, RR (maybe serializable) and isolation.</li>
+</ul></li>
+<li><strong>Recovery</strong>:
+<ul>
+<li>Used shadow paging and a bit of logging for recovery.</li>
+</ul></li>
+<li><strong>Misc</strong>:
+<ul>
+<li>Views were used for authorization. Either a centralized DB admin could delegate rights, or the right delegation was completely decentralized.</li>
+</ul></li>
+</ul></li>
+<li>Phase Two: Evaluation
+<ul>
+<li>Added SQL construct like EXISTS, LIKE, prepared statements, and outer joins.</li>
+<li>Users wanted to add groups to view authorization.</li>
+<li>Shadow paging really hurts data locality.</li>
+<li>Convoys happen in which a thread with a lock is blocked for a while by the OS.</li>
 </ul></li>
 </ul>
