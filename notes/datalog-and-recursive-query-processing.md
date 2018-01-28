@@ -11,6 +11,9 @@
     - For linearly recursive rules, there is also a small optimization.
 - Query-Subquery Evaluation and Magic Sets.
     - It's a little intense; see picture on phone.
+    - SIPS (Sideways Information Passing Strategy) are different strategies to
+      reorder atoms within a rule so that sideways information passing runs
+      more efficiently.
 - Applications
     - Datalog has found uses in the areas of program analysis (e.g. points-to
       analysis), declarative networking (e.g. NDLog and Bloom), data

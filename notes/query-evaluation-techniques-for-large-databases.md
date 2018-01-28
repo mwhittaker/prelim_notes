@@ -1,4 +1,35 @@
 # Query Evaluation Techniques for Large Databases
+- Architecture of Query Execution Engines
+    - basic stuff about logical vs physical algebra, iterators, left-deep vs right-deep vs bushy plans, an overview of how volcano represents iterators in C
+    - mostly basic or outdated stuff
+- Sorting
+    - Relacement sort for runs of size 2B
+    - Double buffering where not every input is double buffered. Look at high key to predict which one will be read next
+    - Smarter merge fanning with runs of different sizes eg 12 runs 10 buffers
+    - Blocked IO aka reading and writing more than a page at a time. This is similar to double buffering
+    - Paper describes how hybrid hash is better for data sizes that are slightly bigger than memory and gives a confusing hybrid external sort. Can just write a small run to disk, then sort the whole thing and merge
+- HASHING
+    - Grace hash but with range partitioning at first instead of hash partitioning
+    - Overflow avoidance: grace hash
+    - Overflow resolution: hybrid hash
+    - Choosing a good hash: we can maintain stats on the data during the first partitioning to help on subsequent partitioning
+- DISK ACCESS
+    - Sparse clustered index (pointer to each page) vs dense unclustered inhdex
+    - Unclustered windowed scans with priority queue
+- Aggregation and duplicate removal
+    - nested loop aggregation (for each input, iterate over output of groups)
+    - sort based duplicate removeal: dedup as we merge
+    - sort base agg; aggregate as we merge
+    - hash based algo
+- Binary Matching Operations (akak joins)
+    - nested loop joins: nothing new
+    - heap-filter merge join: sort the smaller relation; generate runs of the bigger relation using replacement sort, and then do a merge sort of the two
+    - hybrid merge join. sort the outer relation and merge it with an index on the inner relation. then sort by rid and retreive the inner tuples
+    - pointer joins: tuples in R can store pointers to S (like a join index; also like an index join)
+- Universal Quantification (aka division)?
+    - TODO
+
+
 - Sorting
     - Non-uniform block sizes and forecasting
     - Dynamically adjusted block sizes to balance I/O and CPU

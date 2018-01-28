@@ -331,12 +331,55 @@
 </ul>
 <h1 id="query-evaluation-techniques-for-large-databases">Query Evaluation Techniques for Large Databases</h1>
 <ul>
+<li>Architecture of Query Execution Engines
+<ul>
+<li>basic stuff about logical vs physical algebra, iterators, left-deep vs right-deep vs bushy plans, an overview of how volcano represents iterators in C</li>
+<li>mostly basic or outdated stuff</li>
+</ul></li>
+<li>Sorting
+<ul>
+<li>Relacement sort for runs of size 2B</li>
+<li>Double buffering where not every input is double buffered. Look at high key to predict which one will be read next</li>
+<li>Smarter merge fanning with runs of different sizes eg 12 runs 10 buffers</li>
+<li>Blocked IO aka reading and writing more than a page at a time. This is similar to double buffering</li>
+<li>Paper describes how hybrid hash is better for data sizes that are slightly bigger than memory and gives a confusing hybrid external sort. Can just write a small run to disk, then sort the whole thing and merge</li>
+</ul></li>
+<li>HASHING
+<ul>
+<li>Grace hash but with range partitioning at first instead of hash partitioning</li>
+<li>Overflow avoidance: grace hash</li>
+<li>Overflow resolution: hybrid hash</li>
+<li>Choosing a good hash: we can maintain stats on the data during the first partitioning to help on subsequent partitioning</li>
+</ul></li>
+<li>DISK ACCESS
+<ul>
+<li>Sparse clustered index (pointer to each page) vs dense unclustered inhdex</li>
+<li>Unclustered windowed scans with priority queue</li>
+</ul></li>
+<li>Aggregation and duplicate removal
+<ul>
+<li>nested loop aggregation (for each input, iterate over output of groups)</li>
+<li>sort based duplicate removeal: dedup as we merge</li>
+<li>sort base agg; aggregate as we merge</li>
+<li>hash based algo</li>
+</ul></li>
+<li>Binary Matching Operations (akak joins)
+<ul>
+<li>nested loop joins: nothing new</li>
+<li>heap-filter merge join: sort the smaller relation; generate runs of the bigger relation using replacement sort, and then do a merge sort of the two</li>
+<li>hybrid merge join. sort the outer relation and merge it with an index on the inner relation. then sort by rid and retreive the inner tuples</li>
+<li>pointer joins: tuples in R can store pointers to S (like a join index; also like an index join)</li>
+</ul></li>
+<li>Universal Quantification (aka division)?
+<ul>
+<li>TODO</li>
+</ul></li>
 <li>Sorting
 <ul>
 <li>Non-uniform block sizes and forecasting</li>
 <li>Dynamically adjusted block sizes to balance I/O and CPU</li>
 <li>Smarter merging when the number of runs is not a multiple of the number of blocks.</li>
-<li>Smaller fanout for the last merge so it doesn't consume too much memory when fed into parent</li>
+<li>Smaller fanout for the last merge so it doesn&#8217;t consume too much memory when fed into parent</li>
 </ul></li>
 <li>Hashing
 <ul>
@@ -361,14 +404,14 @@
 <li>Division: R(A, B) and S(B)
 <ul>
 <li>Direct sort-based method: sort R and S. Scan over R and repeatedly scan over S. Emit tuples in R that match everything in S.</li>
-<li>Direct hash-based method: Create a hash table indexing tuples s_1, ..., s_n in S. Assign n-length bitvector for each tuple in R and record which tuples match everything in S.</li>
+<li>Direct hash-based method: Create a hash table indexing tuples s_1, &#8230;, s_n in S. Assign n-length bitvector for each tuple in R and record which tuples match everything in S.</li>
 <li>Divisor (denominator) partitioning: partition S and output tuples that match all parts of S.</li>
 <li>Quotient (numerator) partitioning: partition R and output tuples that match any partition.</li>
 </ul></li>
 <li>Duality of hash and sort
 <ul>
 <li>Merging and partitioning are duals.</li>
-<li>Sorting is good because it produces interesting orders; it's bad because the fanout depends on the size of the larger relation and it is algorithmically slower</li>
+<li>Sorting is good because it produces interesting orders; it&#8217;s bad because the fanout depends on the size of the larger relation and it is algorithmically slower</li>
 <li>Hashing is good because it depends on the size of the smaller relation and is algorithmically faster; bad because of skew and no interesting orders</li>
 </ul></li>
 <li>Execution of complex query plans
@@ -431,7 +474,7 @@
 </ul></li>
 <li>Surrogates
 <ul>
-<li>Don't copy tuples, just point to them</li>
+<li>Don&#8217;t copy tuples, just point to them</li>
 </ul></li>
 <li>Bloom filters</li>
 </ul></li>
@@ -573,6 +616,7 @@ If we join the first two tuples of S with all of R and then the last two tuples 
 <li>Query-Subquery Evaluation and Magic Sets.
 <ul>
 <li>It&#8217;s a little intense; see picture on phone.</li>
+<li>SIPS (Sideways Information Passing Strategy) are different strategies to reorder atoms within a rule so that sideways information passing runs more efficiently.</li>
 </ul></li>
 <li>Applications
 <ul>
