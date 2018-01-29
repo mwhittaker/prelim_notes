@@ -1,35 +1,29 @@
 <h1 id="the-gamma-database-machine-project">The Gamma Database Machine Project</h1>
 <ul>
-<li>Software architecture
+<li>tl;dr
 <ul>
-<li>Horizontal parititioning with round robin, hash, or range</li>
-<li>Catalog manager, query manager, scheduler, operator processes</li>
-<li>Queries embedded in C or issued ad-hoc</li>
-<li>Standard relational optimizer with distributed joins</li>
-<li>Operators act as single node operators with split table attached</li>
+<li>Gamma is a shared nothing horizontally partitioned database with pretty standard distributed query algorithms, distributed deadlock detection, distributed recovery (not sure why), chained declustering, and not much description of how replication is made consistent.</li>
 </ul></li>
-<li>Query processing algorithms
+<li>Software Architecture of Gamma
 <ul>
-<li>Selection trivial</li>
-<li>Distributed SMJ, Grace hash, simple hash, and hybrid hash equijoins</li>
-<li>Distributed hybrid hash join implementation (k disks, m procs)</li>
-<li>Distributed group by (local agg then hash grouping keys)</li>
-<li>Insert standard w/ movement when partitioning key changed</li>
+<li>Gamma horizontally partitions all relations using round robin, hash, or range partitioning.</li>
+<li>Locally, each node can maintain indexes on its relations.</li>
+<li>The main components are a single catalog manager, a query manager for every query that compiles the query before sending it off to an operator (if its a single node transaction) or a scheduler (if its a multi-node transaction), a scheduler process which schedules queries across a set of nodes and coordinates 2PC for transactions, and operator processes which actually execute transactions.</li>
+<li>The query manager only considers left-deep plans to avoid memory contention.</li>
+<li>Operators are written like normal single node operators with split tables to manage distribution.</li>
 </ul></li>
-<li>Concurrency control
+<li>Query Processing Algorithms
 <ul>
-<li>S, X, IS, IX, SIX file and page locks</li>
-<li>Local deadlock detectors plus periodic global detector (time halved and doubled)</li>
+<li>Gamma supports sort merge join, grace hash join, simple hash join, and hybrid hash equijoin. Theta joins are not supported.</li>
+<li>Gamma uses a weird distributed hybrid hash join. I think the complexity might be because they&#8217;re not assuming all nodes have disks, but I&#8217;m not exactly sure.</li>
 </ul></li>
-<li>Recovery
+<li>Transaction and Failure Management
 <ul>
-<li>Updates create globally unique LSNs</li>
-<li>Log entries sent to centralized log managers</li>
-<li>Log manager sends flushed LSNs back to operators</li>
-<li>Scheduler sends commit or abort to log managers</li>
-<li>On abort, operators get aborted entries from log manager</li>
-<li>Keep extra pages around to avoid waiting on log manager</li>
+<li>Nodes use 2PL with two granularities of intention locking.</li>
+<li>Nodes perform deadlock detection locally and periodically sent waits-for graphs to a centralized deadlock detector where the sending period is multiplicatively increased, multiplicatively decreased. Victim nodes are those with the fewest locks.</li>
+<li>Surprisingly, nodes perform ARIES in a distributed fashion where a node will not write its log locally, but instead send it to a remote node. This forces GAMMA to send messages back and forth before persisting data to preserve WAL, for example. I&#8217;m not sure why this is done.</li>
+<li>The scheduler process coordinates 2PC among the ARIES processes that are a part of a transaction.</li>
+<li>Gamma uses chained declustering as opposed to interleaved declustering.</li>
+<li>Gamma doesn&#8217;t describe how writes are consistently replicated; it just says that writes are sent to both the primary and the backup.</li>
 </ul></li>
-<li>Fault tolerance</li>
-<li>Chained vs interleaved declustering</li>
 </ul>
